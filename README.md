@@ -1,1 +1,1 @@
-# mace
+# CS184 Final Project
