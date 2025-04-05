@@ -1,1 +1,277 @@
+<html>
+<head>
+	<script src='https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.4/MathJax.js?config=default'></script>
+	<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600&display=swap" rel="stylesheet">
+	<style>
+		body {
+			font-family: 'Inter', sans-serif;
+			margin: 0;
+			padding: 0;
+			background-color: #fff;
+			color: #333;
+		}
+
+		h1 {
+			text-align: center;
+			margin-top: 40px;
+			font-size: 2em;
+		}
+
+		.container {
+			margin: 0 auto;
+			padding: 60px 20%;
+		}
+
+		figure {
+			text-align: center;
+			margin: 30px 0;
+		}
+
+		img {
+			display: inline-block;
+			max-width: 100%;
+			height: auto;
+		}
+
+		table {
+			width: 100%;
+			text-align: center;
+			border-collapse: collapse;
+			margin-top: 20px;
+		}
+
+		td {
+			text-align: center;
+			padding: 10px;
+		}
+
+		figcaption {
+			font-size: 0.95em;
+			color: #555;
+			margin-top: 8px;
+		}
+
+		ul, ol {
+			margin-left: 20px;
+		}
+
+		code {
+			background-color: #f5f5f5;
+			padding: 2px 4px;
+			border-radius: 4px;
+			font-family: monospace;
+		}
+
+		h2, h4 {
+			border-bottom: 1px solid #ccc;
+			padding-bottom: 6px;
+		}
+	</style>
+</head>
+<body>
+	<div class="container">
+        
+        <h1>What in the World?</h1>
+        
+        <h4>Advika Bhike, Catherine Chu, Eshani Jha, Malavikha Sudarshan</h4>
+
+        <p>We're building a Minecraft-style 3D environment in Unity that uses custom shaders to apply textures and non-photorealistic effects inspired by the four seasons of the year. Our goal is to explore how artistic styles can be integrated into real-time rendering using both procedural techniques and shader programming.</p> 
+    
+        <h3>Problem Description</h3>
+        <p>Games like Minecraft rely on a simple, iconic visual style: we want to take that foundation and turn it into something more artistically expressive. Our project looks at how to render stylised, themed environments in real time using shader-based techniques. The challenge is to create both visual richness and variety without sacrificing performance or relying on manually designed textures for every object.
+            We’re tackling this by designing shaders that procedurally map 2D textures onto 3D voxel-style assets and by developing non-photorealistic effects that give the world a more handcrafted look. This is especially interesting in the context of real-time graphics because it blends technical rendering pipelines with creative direction, which is something that's not always easy to automate or generalise.</p>
+
+        <h3>Goals and Deliverables</h3>
+        <h4>Part 1: Baseline Plan / What We Plan to Deliver</h4>
+        <p>Our baseline plan is to deliver shader-based mods for Minecraft in Unity’s rendering pipeline, inspired by personalized themes, such as The Lorax and Japan. This will involve developing custom shaders to incorporate unique textures and artistic styles, then applying them to enhance the appearances of both existing Minecraft objects and our own theme-inspired assets (e.g. butterflies, swans, mountain tops).</p>
+        
+        <h5>Texture Shader</h5>
+        <p>Our first objective is to develop a shader that performs texture mapping on assets within a 3D Minecraft-style mesh. For instance, in the Japan-themed demo, we will map 2D patterns of cherry blossoms and cobblestones onto the vanilla 3D models of trees and paths from the Minecraft framework. Specifically, the shader will utilize the approach outlined in the “Solid Texture Synthesis from 2D Exemplars” paper, which will allow us to efficiently generate novel 3D textures from the provided 2D examples.</p>
+        
+        <h5>Style Shader</h5>
+        <p>To render non-photorealistic effects, our goal is to implement a watercolor-like appearance that complements the Japan theme. This shader will apply techniques including soft shading with a light falloff, blurring, global desaturation and noise to simulate the look of smooth, blended watercolor brush strokes on a grainy paper canvas.</p>
+        
+
+        <h3>Schedule</h3>
+        <p>
+            The schedule for getting these specific tasks, as well as other miscellaneous tasks, is listed below. Each week we will each work on different tasks and plan to have it done by the Friday of that week.
+          </p>
+          <p>
+            We will have a synchronous meeting in-person (Zoom for emergencies) to touch base every Friday at 1pm (can be adjusted based on circumstance). During this time, we also plan to work on tasks that we decided we will all work together on. The immediate weekend of that week will be our buffer period.
+          </p>
+          <p>
+            We definitely plan to have more meetings, but that will be planned on a more day-by-day basis. We plan to have our minimum deliverables done by Week 3, so we can have Week 4 as a buffer week for anything that takes an unexpected amount of time, or best case, work on some of the things we listed to do if we happened to have more time.
+          </p>
+          <p>
+            For the ambition tasks, we have allocated them to specific people, but ideally, we would work on them together since they seem more complicated. We formatted this to have a checkmark for everyone and have different tasks listed under each person. For tasks that will be shared and worked on together, we wrote that under “everyone”.
+          </p>
+        
+          <h4>Week 1 (by April 11)</h4>
+          <ul>
+            <li><strong>Advika</strong>
+              <ul>
+                <li><input type="checkbox"> Texture for blue sky</li>
+                <li><input type="checkbox"> Take notes/save images for write up</li>
+              </ul>
+            </li>
+            <li><strong>Catherine</strong>
+              <ul>
+                <li><input type="checkbox"> Texture for oak trees</li>
+                <li><input type="checkbox"> Take notes/save images for write up</li>
+              </ul>
+            </li>
+            <li><strong>Eshani</strong>
+              <ul>
+                <li><input type="checkbox"> Texture for non-reflect still (non-moving) water</li>
+                <li><input type="checkbox"> Take notes/save images for write up</li>
+              </ul>
+            </li>
+            <li><strong>Malavikha</strong>
+              <ul>
+                <li><input type="checkbox"> Texture for one snowflake</li>
+                <li><input type="checkbox"> Take notes/save images for write up</li>
+              </ul>
+            </li>
+            <li><strong>Everyone</strong>
+              <ul>
+                <li><input type="checkbox"> Research how water can be modeled as a reflective material (e.g. what physics equations to use, what specific software can be useful)</li>
+                <li><input type="checkbox"> Formulate outline for video (e.g. media we want to use, general idea of script/format)</li>
+              </ul>
+            </li>
+          </ul>
+          
+          <h4>Week 2 (by April 18)</h4>
+          <ul>
+            <li><strong>Advika</strong>
+              <ul>
+                <li><input type="checkbox"> Texture for night sky</li>
+                <li><input type="checkbox"> Take notes/save images for write up</li>
+              </ul>
+            </li>
+            <li><strong>Catherine</strong>
+              <ul>
+                <li><input type="checkbox"> Texture for non-leafed tree for winter</li>
+                <li><input type="checkbox"> Take notes/save images for write up</li>
+              </ul>
+            </li>
+            <li><strong>Eshani</strong>
+              <ul>
+                <li><input type="checkbox"> Texture for 2 fallen leaves</li>
+                <li><input type="checkbox"> Take notes/save images for write up</li>
+              </ul>
+            </li>
+            <li><strong>Malavikha</strong>
+              <ul>
+                <li><input type="checkbox"> Texture for 2 fallen leaves</li>
+                <li><input type="checkbox"> Take notes/save images for write up</li>
+              </ul>
+            </li>
+            <li><strong>Everyone</strong>
+              <ul>
+                <li><input type="checkbox"> Implement reflectivity in water</li>
+                <li><input type="checkbox"> Work on explaining technical approach in the video</li>
+                <li><input type="checkbox"> Record explaining technical approach for the video (should be half the video)</li>
+                <li><input type="checkbox"> Put together script for video</li>
+              </ul>
+            </li>
+          </ul>
+          
+          <h4>Week 3 (by April 25)</h4>
+          <ul>
+            <li><strong>Advika</strong>
+              <ul>
+                <li><input type="checkbox"> Texture for sunset sky</li>
+                <li><input type="checkbox"> (if time) research the way colors bleed into sky based on the sun and how it can transition into night</li>
+                <li><input type="checkbox"> Take notes/save images for write up</li>
+              </ul>
+            </li>
+            <li><strong>Catherine</strong>
+              <ul>
+                <li><input type="checkbox"> Texture for cherry blossom tree</li>
+                <li><input type="checkbox"> (if time) research the way a tree or tree's leaves might sway depending on the wind</li>
+                <li><input type="checkbox"> Take notes/save images for write up</li>
+              </ul>
+            </li>
+            <li><strong>Eshani</strong>
+              <ul>
+                <li><input type="checkbox"> Work on reflective water</li>
+                <li><input type="checkbox"> (if time) research butterfly wings flapping</li>
+                <li><input type="checkbox"> Take notes/save images for write up</li>
+              </ul>
+            </li>
+            <li><strong>Malavikha</strong>
+              <ul>
+                <li><input type="checkbox"> Work on reflective water</li>
+                <li><input type="checkbox"> (if time) research how the sky transitions throughout the day</li>
+                <li><input type="checkbox"> Take notes/save images for write up</li>
+              </ul>
+            </li>
+            <li><strong>Everyone</strong>
+              <ul>
+                <li><input type="checkbox"> Work on explaining technical approach in the video</li>
+                <li><input type="checkbox"> Put together images and other media for video</li>
+                <li><input type="checkbox"> Organize write up together</li>
+              </ul>
+            </li>
+          </ul>
+          
+          <h4>Week 4 (by May 2)</h4>
+          <ul>
+            <li><strong>Advika</strong>
+              <ul>
+                <li><input type="checkbox"> Finish up anything not done in the past week</li>
+                <li><input type="checkbox"> (if time) implement natural sky and sky transitioning</li>
+              </ul>
+            </li>
+            <li><strong>Catherine</strong>
+              <ul>
+                <li><input type="checkbox"> Finish up anything not done in the past week</li>
+                <li><input type="checkbox"> (if time) implement tree swaying</li>
+              </ul>
+            </li>
+            <li><strong>Eshani</strong>
+              <ul>
+                <li><input type="checkbox"> Finish up anything not done in the past week</li>
+                <li><input type="checkbox"> (if time) implement butterfly wings flapping</li>
+              </ul>
+            </li>
+            <li><strong>Malavikha</strong>
+              <ul>
+                <li><input type="checkbox"> Finish up anything not done in the past week</li>
+                <li><input type="checkbox"> (if time) implement natural sky and sky transitioning</li>
+              </ul>
+            </li>
+            <li><strong>Everyone</strong>
+              <ul>
+                <li><input type="checkbox"> Edit video (put the explanation and media stuff together, add effects, make it enjoyable)</li>
+                <li><input type="checkbox"> Finalize and edit write up</li>
+                <li><input type="checkbox"> Work on ambition tasks together</li>
+              </ul>
+            </li>
+          </ul>
+          
+    
+        <h3>Resources</h3>
+        <h4>Papers and Online References</h4>
+        <ul>
+            <li><a href="http://www.cs.princeton.edu/courses/archive/fall07/cos597B/papers/kopf-solid-texture.pdf">Solid Texture Synthesis from 2D Exemplars</a></li>
+            <li><a href="https://youtu.be/dSS5HuSr4SQ?si=XbviSwVSCmP1UrQZ">Minecraft Shaders Tutorial</a></li>
+            <li><a href="https://www.youtube.com/watch?v=HHMJevNEYPc">Minecraft Shaders with Realistic Lighting Tutorial</a></li>
+          </ul>
+          
+          <h4>Computing Platform, Hardware and Software</h4>
+          <p>We'll primarily use our personal laptops for general coding, debugging, and development. For rendering shaders and animations, we will SSH into the EECS Instructional Machines, as they have GPUs better suited for graphics-intensive tasks.        </p>
+          
+          <p>We will use the following software resources:</p>
+          <ul>
+            <li><strong>Blender</strong>: Used to create static models such as stylized trees and rocks, as well as animated entities like butterflies. Models will be exported as .obj files.</li>
+            <li><strong>Blockbench</strong>: Will import .obj files, convert them into .json for Minecraft compatibility, and allow UV mapping setup.</li>
+            <li><strong>Unity with URP Shader Graph and HLSL</strong>: Used to design and prototype visual shaders. These prototypes will be validated in Unity before translation.</li>
+            <li><strong>GLSL</strong>: Versions of shaders will be hand-coded based on Unity prototypes and implemented via Optifine’s .vsh and .fsh files.</li>
+            <li><strong>Forge</strong>: Will handle Minecraft-side integration, including asset registration, block overrides, and environmental scripting.</li>
+          </ul>    
+    
+    </div>
+</body>
+</html>
 
