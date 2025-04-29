@@ -13,6 +13,10 @@ in vec4 glcolor;
 layout(location = 0) out vec4 color;
 
 void main() {
+	float k, c = 50.0, 0.005;
+	vec2 newtexcoord = texcoord + vec2(sin(texcoord.y * k) * c, cos(texcoord.x * k) * c);
+
+	// normal code
 	color = texture(gtexture, texcoord) * glcolor;
 	color *= texture(lightmap, lmcoord);
 	if (color.a < alphaTestRef) {
