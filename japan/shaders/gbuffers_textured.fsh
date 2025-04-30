@@ -17,7 +17,7 @@ void main() {
 	vec2 newtexcoord = texcoord + vec2(sin(texcoord.y * k) * c, cos(texcoord.x * k) * c);
 
 	// normal code
-	color = texture(gtexture, texcoord) * glcolor;
+	color = texture(gtexture, newtexcoord) * glcolor;
 	color *= texture(lightmap, lmcoord);
 	if (color.a < alphaTestRef) {
 		discard;
