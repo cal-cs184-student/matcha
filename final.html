@@ -1,0 +1,163 @@
+<html>
+<head>
+	<script src='https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.4/MathJax.js?config=default'></script>
+	<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600&display=swap" rel="stylesheet">
+	<style>
+		body {
+			font-family: 'Inter', sans-serif;
+			margin: 0;
+			padding: 0;
+			background-color: #fff;
+			color: #333;
+		}
+
+		h1 {
+			text-align: center;
+			margin-top: 40px;
+			font-size: 2em;
+		}
+
+		.container {
+			margin: 0 auto;
+			padding: 60px 20%;
+		}
+
+		figure {
+			text-align: center;
+			margin: 30px 0;
+		}
+
+		img {
+			display: inline-block;
+			max-width: 100%;
+			height: auto;
+		}
+
+		table {
+			width: 100%;
+			text-align: center;
+			border-collapse: collapse;
+			margin-top: 20px;
+		}
+
+		td {
+			text-align: center;
+			padding: 10px;
+		}
+
+		figcaption {
+			font-size: 0.95em;
+			color: #555;
+			margin-top: 8px;
+		}
+
+		ul, ol {
+			margin-left: 20px;
+		}
+
+		code {
+			background-color: #f5f5f5;
+			padding: 2px 4px;
+			border-radius: 4px;
+			font-family: monospace;
+		}
+
+		h2, h4 {
+			border-bottom: 1px solid #ccc;
+			padding-bottom: 6px;
+		}
+	</style>
+</head>
+<body>
+	<div class="container">
+        
+        <h1>What in the World? (Team 60)</h1>
+        <h4>Advika Bhike, Catherine Chu, Eshani Jha, Malavikha Sudarshan</h4>
+
+        <p>GitHub: <a href="https://github.com/cal-cs184-student/matcha">https://github.com/cal-cs184-student/matcha</a></p>
+        <p>Website: <a href="https://cal-cs184-student.github.io/matcha/final.html">https://cal-cs184-student.github.io/matcha/final.html</a></p>
+        <!-- <img src="cover.png">  -->
+        <p>Final Slides: </p>
+        <p>Final Video: </p>
+ 
+        <h2>Abstract</h2>
+		<p>This project presents a shader-based mod for Minecraft, developed in Unity’s rendering pipeline and themed around elements of Japanese aesthetics. The mod introduces custom texture and style shaders to transform the visual appearance of Minecraft assets with hand-crafted patterns, watercolor-inspired shading, and non-photorealistic rendering effects. Additionally, lightweight animations such as butterfly motion and tree swaying were implemented to enhance realism. The final result is a cohesive visual experience that integrates stylized textures, soft lighting, and motion effects into a playable scene. This work explores the application of real-time shader programming and performance optimization to achieve artistic rendering goals in a game-like environment.</p>
+
+		<h2>Technical Approach</h2>
+		<p>The project implemented a set of custom shaders within Unity to stylize a Minecraft-inspired world. The approach was grounded in techniques from “Solid Texture Synthesis from 2D Exemplars,” adapting 2D textures such as cherry blossoms and cobblestones into synthesized 3D surfaces. These were mapped onto vanilla Minecraft-style models, including trees and paths.</p>
+		<p>To achieve the watercolor aesthetic, the style shader integrated multiple visual techniques: soft shading with light falloff, Gaussian blur, global desaturation, and paper-like noise. These non-photorealistic rendering (NPR) techniques emulated smooth, blended brush strokes on textured surfaces, contributing to the thematic consistency of the Japanese setting.</p>
+		<p>Lightweight animations were added to improve environmental realism. A Unity script animated butterflies orbiting trees using sine and cosine functions, and vertex shader noise displaced tree models to simulate wind swaying. Both effects were synchronized and performance-tested to ensure stability within gameplay.</p>
+		<p>Challenges included ensuring shader compatibility across versions of Unity and Minecraft rendering interfaces, and minimizing visual artifacts such as texture distortion and jagged edges. These were addressed through mipmapping, bilinear filtering, and iterative debugging of vertex-level functions.</p>
+		<p>Key lessons included deeper familiarity with Unity’s shader pipeline, improved debugging workflows for graphical programming, and strategies for managing performance trade-offs while designing stylized effects.</p>
+
+		<h2>Results</h2>
+		<p>Final outputs include:</p>
+		<ul>
+			<li>Textured tree trunks and paths with cherry blossom and cobblestone patterns</li>
+			<li>Watercolor shader applied to blocks and environment</li>
+			<li>Butterfly and swan entities with stylized textures</li>
+			<li>Animated butterfly movement and tree vertex noise for swaying</li>
+			<li>Packaged zip folder containing a bundled shader and resource pack</li>
+		</ul>
+		<p>Performance evaluation confirmed stable FPS (~60) with all shaders and animations active, and rendering quality was quantitatively evaluated using SSIM and MSE comparisons to reference textures. Artifacts were minimal following shader refinement.</p>
+
+        <p>Here are some of the textures we designed (see slides and video for more examples):</p>		
+        <div style="display: flex; flex-direction: column; align-items: center;">
+          <table style="width: 100%; text-align: center; border-collapse: collapse; margin-top: 0cm;">
+            <tr>
+            <td style="text-align: center;">
+              <img src="imgs/fish.jpeg" width="300px"/>
+              <figcaption>Fish from "The Lorax"</figcaption>
+            </td>
+            <td style="text-align: center;">
+              <img src="imgs/orangeswirl.jpeg" width="300px"/>
+              <figcaption>Orange Swirl</figcaption>
+            </td>
+            <td style="text-align: center;">
+              <img src="imgs/yellowswirl.jpeg" width="250px"/>
+              <figcaption>Yellow Swirl</figcaption>
+            </td>
+	<td style="text-align: center;">
+              <img src="imgs/peppermint_leaf.png" width="300px"/>
+              <figcaption>Peppermint Leaf</figcaption>
+            </td>
+            </tr>
+            <tr>
+            <td style="text-align: center;">
+              <img src="imgs/pinksquare.jpeg" width="300px"/>
+              <figcaption>Pink Square</figcaption>
+            </td>
+            <td style="text-align: center;">
+              <img src="imgs/pinkswirl.jpeg" width="300px"/>
+              <figcaption>Pink Swirl</figcaption>
+            </td>
+            <td style="text-align: center;">
+              <img src="imgs/cherryblossom.png" width="250px"/>
+              <figcaption>Cherry Blossoms</figcaption>
+            </td>
+		<td style="text-align: center;">
+              <img src="imgs/chocolate_leaf_render.png" width="300px"/>
+              <figcaption>Chocolate Leaf</figcaption>
+            </td>
+            </tr>
+          </table>
+        </div>
+
+		<h2>References</h2>
+		<ul>
+			<li>Lefebvre, Sylvain, and Hugues Hoppe. “Appearance-Space Texture Synthesis.” ACM Transactions on Graphics (2006).</li>
+			<li>Unity Shader Graph Documentation</li>
+			<li>OptiFine and Blockbench Documentation</li>
+		</ul>
+
+		<h2>Contributions</h2>
+		<ul>
+			<li><strong>Advika Bhike:</strong> Style shader implementation, texture design, animation scripting</li>
+			<li><strong>Catherine Chu:</strong> Texture mapping logic, Lorax-world shaders, testing and debugging</li>
+			<li><strong>Eshani Jha:</strong> Japan-world textures and butterfly/swan entity creation</li>
+			<li><strong>Malavikha Sudarshan:</strong> Watercolor shading logic, tree sway shader, performance evaluation</li>
+		</ul>
+
+</body>
+</html>
+
