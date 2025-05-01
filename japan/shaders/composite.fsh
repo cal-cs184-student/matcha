@@ -24,7 +24,6 @@ void main() {
         }
     }
     color_bleed /= total;
-    vec4 normal_stuff = texture(texture, texcoord * 4.0);
-    color.rgb = color_bleed * 0.9 + normal_stuff.rgb * 0.1; 
-    color.a = 1.0; 
+
+    color = vec4(color_bleed, 1.0);
 }
