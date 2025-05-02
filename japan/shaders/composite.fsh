@@ -1,13 +1,11 @@
-#version 330 compatibility 
+#version 330 compatibility
 
 uniform sampler2D colortex0;
 uniform vec2 resolution;
 
-in vec2 texcoord;
-out vec4 fragColor;
-
+varying vec2 texcoord;   // Use 'varying' to receive texture coordinates from the vertex shader
 void main() {
-    vec2 uv = texcoord; // already normalized [0.0, 1.0]
+    vec2 uv = texcoord;  // Already normalized [0.0, 1.0]
 
     // Use texel size based on resolution to avoid oversampling
     vec2 texelSize = 1.0 / resolution;
@@ -15,22 +13,23 @@ void main() {
     vec4 color = vec4(0.0);
     float totalWeight = 0.0;
 
-    // 3x3 blur kernel with Gaussian-like weights (sharper center)
-    for (int x = -1; x <= 1; x++) {
-        for (int y = -1; y <= 1; y++) {
-            vec2 offset = vec2(x, y) * texelSize;
-            float weight = exp(-(x*x + y*y) / 2.0);  // Weighing samples (center heavier)
+    // 5x5 Gaussian-like blur with center-heavy weights
+    for (int x = -2; x <= 2; ++x) {
+        for (int y = -2; y <= 2; ++y) {
+            vec2 offset = vec2(x, y) * texelSize * 1.1; // 1.5 = blur strength factor
 
-            color += texture(colortex0, uv + offset) * weight;
-            totalWeight += weight;  // Keep track of total weight
+            // Gaussian weight (less blur at edges)
+            float weight = exp(-(x*x + y*y) / 2.0); // tune denominator for blur softness
+
+            color += texture2D(colortex0, uv + offset) * weight;  // Use 'texture2D' for compatibility mode
+            totalWeight += weight;
         }
     }
 
-    color /= totalWeight;  // Normalize to avoid over-brightening
+    color /= totalWeight;
 
-    // Optional: simulate watercolor glow by soft gamma boost
+    // Optional glow boost
     color.rgb = pow(color.rgb, vec3(0.9));
 
-    fragColor = color;
+    gl_FragColor = color; // Use 'gl_FragColor' for compatibility mode
 }
-
