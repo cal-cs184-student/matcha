@@ -7,7 +7,6 @@ varying vec2 texcoord;   // Use 'varying' to receive texture coordinates from th
 void main() {
     vec2 uv = texcoord;  // Already normalized [0.0, 1.0]
 
-    // Use texel size based on resolution to avoid oversampling
     vec2 texelSize = 1.0 / resolution;
 
     vec4 color = vec4(0.0);
@@ -18,7 +17,6 @@ void main() {
         for (int y = -2; y <= 2; ++y) {
             vec2 offset = vec2(x, y) * texelSize * 1.1; // 1.5 = blur strength factor
 
-            // Gaussian weight (less blur at edges)
             float weight = exp(-(x*x + y*y) / 2.0); // tune denominator for blur softness
 
             color += texture2D(colortex0, uv + offset) * weight;  // Use 'texture2D' for compatibility mode
@@ -27,9 +25,6 @@ void main() {
     }
 
     color /= totalWeight;
-
-    // Optional glow boost
     color.rgb = pow(color.rgb, vec3(0.9));
-
-    gl_FragColor = color; // Use 'gl_FragColor' for compatibility mode
+    gl_FragColor = color;
 }
