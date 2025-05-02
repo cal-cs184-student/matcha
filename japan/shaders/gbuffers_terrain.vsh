@@ -14,7 +14,6 @@ void main() {
     // sin curve based swaying motion scaled by time and world position
     float windStrength = 1.0;
     float sway = sin(frameTimeCounter + gl_Vertex.x * 0.2 + gl_Vertex.z * 0.2)
-               * (1.0 - gl_Normal.y)
                * windStrength;
 
     float isLeaf = clamp((gl_Color.g - gl_Color.r - gl_Color.b) * 2.0, 0.0, 1.0); // greener = more likely a leaf
