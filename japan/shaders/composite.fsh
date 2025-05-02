@@ -1,29 +1,31 @@
-#version 330 compatibility
+#version 330 compatibility	
 
-uniform sampler2D colortex0;
-uniform sampler2D texture;
-uniform vec2 texel_size;
+uniform sampler2D colortex0; 
+uniform sampler2D noiseTexture; 
+uniform vec2 resolution; 
 
-in vec2 texcoord;
-
-/* RENDERTARGETS: 0 */
-layout(location = 0) out vec4 color;
+in vec2 texCoord; 
+out vec4 fragColor; 
 
 void main() {
-    vec3 color_bleed = vec3(0.0);
-    float gaussian_weights[9] = float[](1.0, 2.0, 1.0, 2.0, 4.0, 2.0, 1.0, 2.0, 1.0);
-    float total = 0.0;
-    int idx = 0;
+    vec2 uv = gl_FragCoord.xy / resolution.xy;
 
-    for (int y = -1; y <= 1; y++) {
-        for (int x = -1; x <= 1; x++) {
-            vec2 offset = vec2(x, y) * texel_size * 2; 
-            color_bleed += texture(colortex0, texcoord + offset).rgb * gaussian_weights[idx];
-            total += gaussian_weights[idx];
-            idx++;
+    vec4 color = vec4(0.0);
+    float offset = 1.0 / 720.0;
+
+    // 5x5 Gaussian-like blur (soft watercolor blend)
+    for (int x = -2; x <= 2; ++x) {
+        for (int y = -2; y <= 2; ++y) {
+            vec2 sampleUV = uv + vec2(x, y) * offset;
+            color += texture(colortex0, sampleUV);
         }
     }
-    color_bleed /= total;
+    color /= 25.0;
 
-    color = vec4(color_bleed, 1.0);
+    vec4 noise = texture(noiseTexture, uv * 4.0);  // Tiling factor 4.0
+    color.rgb = mix(color.rgb, noise.rgb, 0.05);   // Subtle paper effect
+
+    color.rgb = pow(color.rgb, vec3(0.9));
+
+    fragColor = color;
 }
