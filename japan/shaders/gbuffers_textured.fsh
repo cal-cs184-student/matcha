@@ -13,7 +13,7 @@ in vec4 glcolor;
 layout(location = 0) out vec4 color;
 
 void main() {
-	float k = 50.0;
+	float k = 80.0;
 	float c = 0.005;
 	vec2 newtexcoord = texcoord + vec2(sin(texcoord.y * k) * c, cos(texcoord.x * k) * c);
 
