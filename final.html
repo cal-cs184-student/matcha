@@ -77,71 +77,106 @@
         <p>GitHub: <a href="https://github.com/cal-cs184-student/matcha">https://github.com/cal-cs184-student/matcha</a></p>
         <p>Website: <a href="https://cal-cs184-student.github.io/matcha/final.html">https://cal-cs184-student.github.io/matcha/final.html</a></p>
         <!-- <img src="cover.png">  -->
-        <p>Final Slides: </p>
+        <p>Final Slides: <a href="https://docs.google.com/presentation/d/1ZaHTSO4sCubKaPMQhuTvd9Z5Uo-jNtgcxodGCnF9MSc/edit?usp=sharing">https://docs.google.com/presentation/d/1ZaHTSO4sCubKaPMQhuTvd9Z5Uo-jNtgcxodGCnF9MSc/edit?usp=sharing</a></p>
         <p>Final Video: </p>
  
         <h2>Abstract</h2>
-		<p>In this project, we designed new textures to render in Minecraft using Blockbench. We created two different themes of objects: one themed to Japan (which included cherry blossom blocks) and one themed to the Lorax movie (with the big-headed orange fish). We also programmed a color-bleeding filter over the whole scene, using Gaussian weights as a convolution filter to simulate the watercolor effect of a whole painting. 		</p>
+		<p>In this project, we designed new textures to render in Minecraft using Blockbench. We created two different themes of textures and features: Japan theme and Candy theme. The Japan theme includes textures such as cherry blossom leaves, spiral leaves and koi fish, and features such as a pastel green day sky and swaying trees. The Candy theme includes candy-themed trees and patterned sand, as well as features such as twinkling stars and flashing comets in the night sky, a reflective pink seawater, and a pastel pink day sky with clouds. We also simulated two types of watercolor-effect filters on the rendered scene, implementing Gaussian blurring and bilateral blurring for a color-bleeding effect. </p>
 
 		<h2>Technical Approach</h2>
-		<p>The project implemented a set of custom shaders within Unity to stylize a Minecraft-inspired world. The approach was grounded in techniques from “Solid Texture Synthesis from 2D Exemplars,” adapting 2D textures such as cherry blossoms and cobblestones into synthesized 3D surfaces. These were mapped onto vanilla Minecraft-style models, including trees and paths.</p>
-		<p>To achieve the watercolor aesthetic, the style shader integrated multiple visual techniques: soft shading with light falloff, Gaussian blur, global desaturation, and paper-like noise. These non-photorealistic rendering (NPR) techniques emulated smooth, blended brush strokes on textured surfaces, contributing to the thematic consistency of the Japanese setting.</p>
-		<p>Lightweight animations were added to improve environmental realism. A Unity script animated butterflies orbiting trees using sine and cosine functions, and vertex shader noise displaced tree models to simulate wind swaying. Both effects were synchronized and performance-tested to ensure stability within gameplay.</p>
-		<p>Challenges included ensuring shader compatibility across versions of Unity and Minecraft rendering interfaces, and minimizing visual artifacts such as texture distortion and jagged edges. These were addressed through mipmapping, bilinear filtering, and iterative debugging of vertex-level functions.</p>
-		<p>Key lessons included deeper familiarity with Unity’s shader pipeline, improved debugging workflows for graphical programming, and strategies for managing performance trade-offs while designing stylized effects.</p>
+
+		<h3>Overview of Features</h3>
+
+		<section>
+			<h5>Japan Theme</h5>
+			<ul>
+			  <li>Japan-themed textures: trees, path, koi fish</li>
+			  <li>Pastel green day sky with clouds</li>
+			  <li>Swaying trees <strong>(a reach goal!)</strong></li>
+			</ul>
+		  </section>
+		  
+		  <section>
+			<h5>Candy Theme</h5>
+			<ul>
+			  <li>Candy-themed textures: trees, path, sand</li>
+			  <li>Pastel pink day sky with clouds</li>
+			  <li>Pink seawater with reflection</li>
+			  <li>Twinkling stars and flashing comets <strong>(a reach goal!)</strong></li>
+			</ul>
+		  </section>
+		  
+		  <section>
+			<h5>Blended Theme</h5>
+			<ul>
+			  <li>Mixed candy tree texture</li>
+			  <li>Pink seawater with reflection</li>
+			  <li>Swaying trees</li>
+			</ul>
+		  </section>
+		  
+		  <section>
+			<h5>Additional Effects</h5>
+			<ul>
+			  <li>Watercolor filter implemented using Gaussian blur and bilateral blur</li>
+			</ul>
+		  </section>
+		  
+		<h3>Textures</h3>
+
+		<p>We designed and drew out textures for blocks and modified entities in Blockbench, for both the Candy and Japan-themed world. We set Blockbench’s Preview Scene feature to render and see assets in a simulated game environment before testing it in Minecraft. For our Candy-themed world, we made lollipop swirls, chocolate blocks and other bright, colourful, blocky textures with thick outlines. We also modified an existing entity of the tadpole in Minecraft to create a Lorax-like fish for our candy-themed world.
+			For the Japan-themed world, we made much more subtle, abstract blocks of cobblestone, cherry blossoms, pink water and tree trunks.</p>
+
+			<p>Here are some of the textures we designed (see slides and video for more examples):</p>		
+			<div style="display: flex; flex-direction: column; align-items: center;">
+			  <table style="width: 100%; text-align: center; border-collapse: collapse; margin-top: 0cm;">
+				<tr>
+				<td style="text-align: center;">
+				  <img src="imgs/fish.jpeg" width="300px"/>
+				  <figcaption>Fish from "The Lorax"</figcaption>
+				</td>
+				<td style="text-align: center;">
+				  <img src="imgs/orangeswirl.jpeg" width="300px"/>
+				  <figcaption>Orange Swirl</figcaption>
+				</td>
+				<td style="text-align: center;">
+				  <img src="imgs/cherryblossom.png" width="200px"/>
+				  <figcaption>Cherry Blossoms</figcaption>
+				</td>
+		<td style="text-align: center;">
+				  <img src="imgs/peppermint_leaf.png" width="300px"/>
+				  <figcaption>Peppermint Leaf</figcaption>
+				</td>
+				</tr>
+			  </table>
+			</div>
+
+		<h3>Pink seawater with reflection</h3>
+
+		<h2>Problems Encountered & Solutions</h2>
+
+		<h3>Terrain Disappearing</h3>
+		<p>Another error that we ran into was the terrain going missing while we were editing the vertex shaders. We tackled this by debugging exactly how we were editing the vertex positions, making sure that we were computing in the right spaces and scaling properly. For example, we realized that the line <code>gl_Position = ftransform();</code> was actually short for projecting a vertex from object/model space into camera space, then changed our approach accordingly to displace our vertices before this projection step.</p>
+		<img src="imgs/no_terrain_error.png">
+
+		<h3>Excess Blur Effect</h3>
+		<p> While creating the watercolor effect, we initially only implemented Gaussian blurring and found the blur to be overpowering to the point where the whole screen was green and the whole screen was blue (depending on whether we were looking at a tree or the sky). To resolve this, we played around with different kernel sizes. We started out with a 10x10 kernel, which was really blurry, and then switched to a 3x3 kernel at some point, which ended up being too small to render a blur. We then reverted to the 5x5 kernel, which ended up being more distinct. This issue was also the motivation behind exploring different types of blurring effects, such as bilateral blurring, since we could preserve color between edges better. The hyperparameters we chose for bilateral blurring are shown in the code above. 
+		</p>
+
+		<h3>Knowing Which Files To Edit</h3>
+		<p>When tinting the sky, we originally just tried to change the color to be pink (so the function would return). Then we realized the sky is according to biome. We realized this by referring to code from Minecraft Shader Wiki, which overwrote sky variable in composite.fsh.</p>
+
+		<h3>Lessons Learned</h3>
+		<p>One of the first lessons that we learned was how to familiarize ourselves with the relevant software, shader documentation and GLSL language for our project. To set up rendering in Minecraft, we spent a decent amount of time researching which software tools to install (e.g. Minecraft, Optifine, Forge), and ultimately chose Minecraft with Optifine because of its built-in support for coding new GLSL shaders. It took us a couple of tries to install and set up compatible versions of Minecraft and Optifine, but this whole process taught us how to look up available resources and piece together the ones that best suited our goals. We also looked into the different Minecraft shader files and learned the order in which they render in a game – by taking the time to study the existing codebase and rendering engine, we got a good idea of exactly which shaders to edit for each of our ideas. While implementing our ideas, we learned to apply the concepts that we learned in class about texture mapping, lighting (Blinn Phong shading, one-bounce global illumination, reflection across materials) and shaders (cloth simulation vertex and fragment). We were excited to build upon these, such as trying to implement reflection off of a water surface while following Minecraft’s specific documentation, or simulating swaying trees by first editing the vertex shader for tree leaves to then displace and pass on per-vertex positions to the corresponding fragment shader.		</p>
 
 		<h2>Results</h2>
-		<p>Final outputs include:</p>
+		<!-- <p>Final outputs include:</p>
 		<ul>
 			<li>Textured tree trunks and paths with cherry blossom and cobblestone patterns</li>
 			<li>Watercolor shader applied to blocks and environment</li>
-			<li>Butterfly and swan entities with stylized textures</li>
-			<li>Animated butterfly movement and tree vertex noise for swaying</li>
 			<li>Packaged zip folder containing a bundled shader and resource pack</li>
 		</ul>
-		<p>Performance evaluation confirmed stable FPS (~60) with all shaders and animations active, and rendering quality was quantitatively evaluated using SSIM and MSE comparisons to reference textures. Artifacts were minimal following shader refinement.</p>
-
-        <p>Here are some of the textures we designed (see slides and video for more examples):</p>		
-        <div style="display: flex; flex-direction: column; align-items: center;">
-          <table style="width: 100%; text-align: center; border-collapse: collapse; margin-top: 0cm;">
-            <tr>
-            <td style="text-align: center;">
-              <img src="imgs/fish.jpeg" width="300px"/>
-              <figcaption>Fish from "The Lorax"</figcaption>
-            </td>
-            <td style="text-align: center;">
-              <img src="imgs/orangeswirl.jpeg" width="300px"/>
-              <figcaption>Orange Swirl</figcaption>
-            </td>
-            <td style="text-align: center;">
-              <img src="imgs/yellowswirl.jpeg" width="250px"/>
-              <figcaption>Yellow Swirl</figcaption>
-            </td>
-	<td style="text-align: center;">
-              <img src="imgs/peppermint_leaf.png" width="300px"/>
-              <figcaption>Peppermint Leaf</figcaption>
-            </td>
-            </tr>
-            <tr>
-            <td style="text-align: center;">
-              <img src="imgs/pinksquare.jpeg" width="300px"/>
-              <figcaption>Pink Square</figcaption>
-            </td>
-            <td style="text-align: center;">
-              <img src="imgs/pinkswirl.jpeg" width="300px"/>
-              <figcaption>Pink Swirl</figcaption>
-            </td>
-            <td style="text-align: center;">
-              <img src="imgs/cherryblossom.png" width="250px"/>
-              <figcaption>Cherry Blossoms</figcaption>
-            </td>
-		<td style="text-align: center;">
-              <img src="imgs/chocolate_leaf_render.png" width="300px"/>
-              <figcaption>Chocolate Leaf</figcaption>
-            </td>
-            </tr>
-          </table>
-        </div>
+		<p>Performance evaluation confirmed stable FPS (~60) with all shaders and animations active, and rendering quality was quantitatively evaluated using SSIM and MSE comparisons to reference textures. Artifacts were minimal following shader refinement.</p> -->
 
 		<h2>References</h2>
 		<ul>
@@ -151,12 +186,32 @@
 		</ul>
 
 		<h2>Contributions</h2>
-		<ul>
-			<li><strong>Advika Bhike:</strong> Style shader implementation, texture design, animation scripting</li>
-			<li><strong>Catherine Chu:</strong> Texture mapping logic, Lorax-world shaders, testing and debugging</li>
-			<li><strong>Eshani Jha:</strong> Japan-world textures and butterfly/swan entity creation</li>
-			<li><strong>Malavikha Sudarshan:</strong> Watercolor shading logic, tree sway shader, performance evaluation</li>
-		</ul>
+	<strong>Advika Bhike:</strong> 
+				<ul>
+					<li>Created textures for Japan theme (trees, paths, koi fish) in Blockbench</li>
+					<li>Coded watercolor effect in <code>composite.fsh</code> and <code>shader.properties</code></li>
+					<li>Contributed to writeup, video, and slides</li>
+				</ul>
+	<strong>Catherine Chu:</strong>
+	<ul>
+		<li>Created prototype of Japan-themed world with cherry blossom trees in Blockbench</li>
+		<li>Coded animation of trees swaying in <code>gbuffers_terrain.vsh</code></li>
+		<li>Contributed to writeup, video, and slides</li>
+	  </ul>
+
+	<strong>Eshani Jha:</strong> 
+	<ul>
+		<li>Created textures for Candy theme (trees, paths, sand) in Blockbench</li>
+		<li>Coded reflective pink sea in <code>gbuffers_water.vsh</code>, <code>gbuffers_water.fsh</code>, <code>final.fsh</code>, <code>final.vsh</code></li>
+		<li>Coded stars and comets in <code>gbuffers_skybasic.vsh</code>, <code>gbuffers_skybasic.fsh</code>, <code>composite.fsh</code>, <code>composite.vsh</code></li>
+		<li>Contributed to writeup, video, and slides</li>
+	  </ul>
+	<strong>Malavikha Sudarshan:</strong>
+	<ul>
+		<li>Created textures for Japan theme (trees, paths) in Blockbench</li>
+		<li>Compiled writeup, images, and videos into webpage</li>
+		<li>Contributed to writeup, video, and slides</li>
+	  </ul>
 
 </body>
 </html>
