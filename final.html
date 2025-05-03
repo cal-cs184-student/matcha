@@ -265,7 +265,23 @@
 				raising the result to the 0.9<sup>th</sup> power before setting it as the pixel’s final texture value.
 			  </p>
 		<h3>Gradient sky that changes color from day to night (green sky for japan and pink sky for candy)</h3>
-		<p>To create a pastel themed sky that has a blend of two colors and changes according to whether it is night or day, we used a cosine function to map Minecraft’s internal clock represented by <code>worldTime</code> to a specific time of the day. We defined what we wanted the top of the sky (the zenith) and the horizon to look like (e.g. cotton-candy pink and soft lavender in the morning and pastel purplish pink and deep lavender in the night for the candy theme). Then, we interpolated across these values using the output of the cosine function as our parameter. This final interpolated color is outputted as the color of our sky. Definitely a really pretty implementation of the concept of linear interpolation that we learned about in class! </p>
+		<p>To create a pastel themed sky that has a blend of two colors and changes according to whether it is night or day, we used a cosine function to map Minecraft’s internal clock represented by <code>worldTime</code> to a specific time of the day. </p>
+
+		<pre><code class="language-glsl">// time → [0‥1]   (0 = midnight, 1 = noon)
+float ang     = (float(worldTime) - 6000.0) * (3.14159 / 12000.0);
+float dayFrac = (cos(ang) + 1.0) * 0.5;
+</code></pre>
+			
+		<p>We defined what we wanted the top of the sky (the zenith) and the horizon to look like (e.g. cotton-candy pink and soft lavender in the morning and pastel purplish pink and deep lavender in the night for the candy theme). Then, we interpolated across these values using the output of the cosine function as our parameter.</p>
+
+		<pre><code class="language-glsl">// v = fragment.y / viewportHeight
+vec3 horizonCol = mix(nightH, dayH, dayFrac);
+vec3 zenithCol  = mix(nightZ, dayZ, dayFrac);
+vec3 skyCol     = mix(horizonCol, zenithCol, v);  // final pastel pixel
+gl_FragColor    = vec4(skyCol, 1.0);
+</code></pre>
+		
+		<p>This final interpolated color is outputted as the color of our sky. Definitely a really pretty implementation of the concept of linear interpolation that we learned about in class! </p>
 
 		<h3>Fog and Clouds</h3>
 		<p>
