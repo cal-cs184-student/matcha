@@ -142,7 +142,7 @@
 				</td>
 					
 		<p>
-			OptiFine provides the bridge between Mojang’s fixed rendering pipeline and our custom code. At runtime it injects helpful uniforms (<code>worldTime</code>, <code>sunPosition</code>, <code>gbufferProjectionInverse</code>, <code>shadowtex0</code>, etc.) 
+			OptiFine bridges the gap between Mojang’s fixed rendering pipeline and our custom code. At runtime it injects helpful uniforms (<code>worldTime</code>, <code>sunPosition</code>, <code>gbufferProjectionInverse</code>, <code>shadowtex0</code>, etc.) 
 			into every stage, allowing us to reconstruct world space positions, sample depth buffers, or query the current biome without external libraries. Each stage writes its results to a numbered colortexN. Later 
 			stages can then read those buffers, enabling advanced. For example, <code>gbuffers_terrain.fsh</code> might output raw albedo and normals to colortex0 and colortex1, while <code>composite.fsh</code> normalizes the results, 
 			performs Gaussian blur, and writes the tone mapped result to the screen. Iterative debugging was done through the <code>F3 + T</code> reload key bind. To write our shader code, we started with open-source 
