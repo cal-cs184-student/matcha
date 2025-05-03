@@ -127,7 +127,7 @@
 		<p>
 			Minecraft’s mod friendly architecture separates appearance into two orthogonal layers: resource packs and shader packs. A resource pack is a ZIP whose internal path always begins with <code>assets/</code>. 
 			Below it sit <code>PNG</code> textures, block state <code>JSON</code> files, sound files, and more. Dropping a new image at <code>assets/minecraft/textures/block/grass_block_top.png</code> will override the grassy surface in 
-			game without touching any code. A shader pack, by contrast, lives in the root level directory <code>shaderpacks/</code>. It contains raw <code>GLSL</code> files (<code>.vsh</code> for vertex, .<code>fsh</code> for fragment) under a <code>shaders/</code> 
+			game without touching any code. A shader pack, by contrast, lives in the root level directory <code>shaderpacks/</code>. It contains <code>GLSL</code> files (<code>.vsh</code> for vertex, .<code>fsh</code> for fragment) under a <code>shaders/</code> 
 			folder, plus a <code>shaders.properties</code> files that tells OptiFine which stages (<code>gbuffers_terrain</code>, <code>gbuffers_entities</code>, <code>composite</code>, etc.) should use which programs. </p>
 
 		<p>
@@ -404,7 +404,7 @@ gl_FragColor    = vec4(skyCol, 1.0);
 	  </code></pre>
 	  
 		<p>
-		  Since both the sky and fog use <code>dayFrac</code>, the fog transitions naturally—reddish at sunset, teal at midnight.
+		  Since both the sky and fog use <code>dayFrac</code>, the fog transitions naturally from reddish at sunset to teal at midnight.
 		</p>
 	  
 		<h4>Final Fog Blend</h4>
@@ -583,12 +583,14 @@ float h      = hash(floor(starUV));      // deterministic per cell
 				  </table>
 				</div>
 				
-				<p>
+				
+				  <h3>Real-World Performance</h3>
+
+		<p>
 				One of our main goals with the rendering effects and shaderpacks was to keep everything running within a reasonable frame rate per second (FPS) rate.
 From the beginning, we set a limit that each shader pass should not take more than about 0.2 ms on a 1080p screen, so we could consistently hit 60 FPS (i.e., one frame every 16 ms).
 Some techniques we employed to do this were: avoiding the use of texture lookups for noise or height, using sinusoidal functions to model motion, not using expensive loops, and limiting the screen-space reflection algorithm at 30 steps maximum.	  </p>
 				
-				  <h3>Real-World Performance</h3>
 				
 				  <p>
 					We tested our shaders on two systems:
