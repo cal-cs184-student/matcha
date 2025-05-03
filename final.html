@@ -81,26 +81,6 @@
  
         <h2>Abstract</h2>
 		<p>In this project, we designed new textures to render in Minecraft using Blockbench. We created two different themes of textures and features: Japan theme and Candy theme. The Japan theme includes textures such as cherry blossom leaves, spiral leaves and koi fish, and features such as a pastel green day sky and swaying trees. The Candy theme includes candy-themed trees and patterned sand, as well as features such as twinkling stars and flashing comets in the night sky, a reflective pink seawater, and a pastel pink day sky with clouds. We also blended features from both themes such as candy textures, swaying trees, and reflective water to create a Blended Fantasy theme. Finally, we simulated two types of watercolor-effect filters on the rendered scene, implementing Gaussian blurring and bilateral blurring for a color-bleeding effect. </p>
-
-		<h2>Frameworks and Pipeline</h2>
-		<p>
-			Minecraft’s mod friendly architecture separates appearance into two orthogonal layers: resource packs and shader packs. A resource pack is a ZIP whose internal path always begins with <code>assets/</code>. 
-			Below it sit <code>PNG</code> textures, block state <code>JSON</code> files, sound files, and more. Dropping a new image at <code>assets/minecraft/textures/block/grass_block_top.png</code> will override the grassy surface in 
-			game without touching any code. A shader pack, by contrast, lives in the root level directory <code>shaderpacks/</code>. It contains raw <code>GLSL</code> files (<code>.vsh</code> for vertex, .<code>fsh</code> for fragment) under a <code>shaders/</code> 
-			folder, plus a <code>shaders.properties</code> files that tells OptiFine which stages (<code>gbuffers_terrain</code>, <code>gbuffers_entities</code>, <code>composite</code>, etc.) should use which programs. </p>
-
-		<p>
-			OptiFine provides the bridge between Mojang’s fixed rendering pipeline and our custom code. At runtime it injects helpful uniforms (<code>worldTime</code>, <code>sunPosition</code>, <code>gbufferProjectionInverse</code>, <code>shadowtex0</code>, etc.) 
-			into every stage, allowing us to reconstruct world space positions, sample depth buffers, or query the current biome without external libraries. Each stage writes its results to a numbered colortexN. Later 
-			stages can then read those buffers, enabling advanced. For example, <code>gbuffers_terrain.fsh</code> might output raw albedo and normals to colortex0 and colortex1, while <code>composite.fsh</code> normalizes the results, 
-			performs Gaussian blur, and writes the tone mapped result to the screen. Iterative debugging was done through the <code>F3 + T</code> reload key bind. To write our shader code, we started with open-source 
-			code mimicking Minecraft’s inbuilt renders and modified the necessary <code>.fsh</code> and <code>.vsh</code> files.
-		</p>
-		<p>
-			Blockbench sits one layer above this ecosystem, acting as the content authoring IDE. Here we can model and paint entities in a live PBR preview that emulates Minecraft’s lighting. Blockbench can also export 
-			project meshes as a JSONs and textures as a PNGs to be dropped into the appropriate shader pack or resource pack. During our project we used this workflow to sculpt custom textures (e.g. cherry blossom log, 
-			peppermint sand, and Lorax inspired fish).
-		</p>
 			
 		
 		
@@ -142,6 +122,26 @@
 			  <li>Watercolor filter implemented using Gaussian blur and bilateral blur</li>
 			</ul>
 		  </section>
+
+		<h3>Frameworks and Pipeline</h3>
+		<p>
+			Minecraft’s mod friendly architecture separates appearance into two orthogonal layers: resource packs and shader packs. A resource pack is a ZIP whose internal path always begins with <code>assets/</code>. 
+			Below it sit <code>PNG</code> textures, block state <code>JSON</code> files, sound files, and more. Dropping a new image at <code>assets/minecraft/textures/block/grass_block_top.png</code> will override the grassy surface in 
+			game without touching any code. A shader pack, by contrast, lives in the root level directory <code>shaderpacks/</code>. It contains raw <code>GLSL</code> files (<code>.vsh</code> for vertex, .<code>fsh</code> for fragment) under a <code>shaders/</code> 
+			folder, plus a <code>shaders.properties</code> files that tells OptiFine which stages (<code>gbuffers_terrain</code>, <code>gbuffers_entities</code>, <code>composite</code>, etc.) should use which programs. </p>
+
+		<p>
+			OptiFine provides the bridge between Mojang’s fixed rendering pipeline and our custom code. At runtime it injects helpful uniforms (<code>worldTime</code>, <code>sunPosition</code>, <code>gbufferProjectionInverse</code>, <code>shadowtex0</code>, etc.) 
+			into every stage, allowing us to reconstruct world space positions, sample depth buffers, or query the current biome without external libraries. Each stage writes its results to a numbered colortexN. Later 
+			stages can then read those buffers, enabling advanced. For example, <code>gbuffers_terrain.fsh</code> might output raw albedo and normals to colortex0 and colortex1, while <code>composite.fsh</code> normalizes the results, 
+			performs Gaussian blur, and writes the tone mapped result to the screen. Iterative debugging was done through the <code>F3 + T</code> reload key bind. To write our shader code, we started with open-source 
+			code mimicking Minecraft’s inbuilt renders and modified the necessary <code>.fsh</code> and <code>.vsh</code> files.
+		</p>
+		<p>
+			Blockbench sits one layer above this ecosystem, acting as the content authoring IDE. Here we can model and paint entities in a live PBR preview that emulates Minecraft’s lighting. Blockbench can also export 
+			project meshes as a JSONs and textures as a PNGs to be dropped into the appropriate shader pack or resource pack. During our project we used this workflow to sculpt custom textures (e.g. cherry blossom log, 
+			peppermint sand, and Lorax inspired fish).
+		</p>
 		  
 		<h3>Textures</h3>
 
@@ -235,33 +235,6 @@
 				Then, we make sure only tree leaves are affected, computing a heuristic <code>isLeaf</code> that is closer to 1 for leaf-like green colors and 0 otherwise. The displacement vector becomes motion weighted by <code>isLeaf</code> and different scaling factors per coordinate (less in y direction), and is finally added to the vertex position before its transformation into camera space. </p>
 				<img src="imgs/code_trees_swaying.png">
 		  
-			<h3>Twinkling Stars and Flashing Comets</h3>
-			<p>
-			  Stars were grid-based and hashed to remain stable across frames:
-			</p>
-			<pre><code>float h = hash(floor(starUV));
-		  if (h > 0.982) { /* small star */ }
-		  if (h > 0.9975) { /* big flare */ }</code></pre>
-			<p>
-			  We did this for the twinkling effect:
-			</p>
-			<pre><code>float tw   = 0.5 + 0.5 * sin(worldTime*0.025 + h*80.0);
-		  float halo = smoothstep(0.32, 0.0, length(fract(starUV) - 0.5));
-		  skyCol = mix(skyCol, starC, halo * tw * starPhase);</code></pre>
-		  
-			<p>
-			  Large stars added cross flares:
-			</p>
-			<pre><code>float flare = (smoothstep(0.35, 0.0, abs(f.x)) +
-						 smoothstep(0.35, 0.0, abs(f.y))) * 0.5;
-		  skyCol = mix(skyCol, bigC, (halo+flare) * twBig * starPhase);</code></pre>
-		  
-			<p>
-			  And we added this line for stars to fade in and out smoothly:
-			</p>
-			<pre><code>float starPhase = max(0.0, (0.6 - dayFrac) / 0.6);</code></pre>
-
-		
 			<h3>Watercolor filter effect</h3>
 
 			<img src="compositefsh for watercolor bilateral.png">
@@ -291,8 +264,8 @@
 				and color difference respectively. We also compute a weighted average of these samples and adjust the tone by 
 				raising the result to the 0.9<sup>th</sup> power before setting it as the pixel’s final texture value.
 			  </p>
-		<h3>Sky that changes color from day to night (cotton-candy pink and soft lavender in the morning and pastel purplish pink and deep lavender in the night)</h3>
-		<p>To create a pastel themed sky that has a blend of two colors and changes according to whether it is night or day in Minecraft, we used a cosine function to map Minecraft’s internal clock, represented by my <code>worldTime</code>, to a specific time of the day. We defined what we wanted the top of the sky (the zenith) and the horizon to look like (either cotton-candy pink and soft lavender in the morning and pastel purplish pink and deep lavender in the night, for the horizon and zenith respectively), and then interpolated across these values using the output of the cosine function as our parameter. This final interpolated color is outputted as the color of our sky. Definitely a really pretty implementation of the concept of linear interpolation that we learned about in class! </p>
+		<h3>Gradient sky that changes color from day to night </h3>
+		<p>To create a pastel themed sky that has a blend of two colors and changes according to whether it is night or day, we used a cosine function to map Minecraft’s internal clock represented by <code>worldTime</code> to a specific time of the day. We defined what we wanted the top of the sky (the zenith) and the horizon to look like (either cotton-candy pink and soft lavender in the morning and pastel purplish pink and deep lavender in the night, for the horizon and zenith respectively). Then, we interpolated across these values using the output of the cosine function as our parameter. This final interpolated color is outputted as the color of our sky. Definitely a really pretty implementation of the concept of linear interpolation that we learned about in class! </p>
 
 		<h3>Fog and Clouds</h3>
 		<p>
@@ -363,6 +336,32 @@
 	  
 	  gl_FragColor = vec4(fogged, 1.0);
 	  </code></pre>
+
+		<h3>Twinkling Stars and Flashing Comets</h3>
+			<p>
+			  Stars were grid-based and hashed to remain stable across frames:
+			</p>
+			<pre><code>float h = hash(floor(starUV));
+		  if (h > 0.982) { /* small star */ }
+		  if (h > 0.9975) { /* big flare */ }</code></pre>
+			<p>
+			  We did this for the twinkling effect:
+			</p>
+			<pre><code>float tw   = 0.5 + 0.5 * sin(worldTime*0.025 + h*80.0);
+		  float halo = smoothstep(0.32, 0.0, length(fract(starUV) - 0.5));
+		  skyCol = mix(skyCol, starC, halo * tw * starPhase);</code></pre>
+		  
+			<p>
+			  Large stars added cross flares:
+			</p>
+			<pre><code>float flare = (smoothstep(0.35, 0.0, abs(f.x)) +
+						 smoothstep(0.35, 0.0, abs(f.y))) * 0.5;
+		  skyCol = mix(skyCol, bigC, (halo+flare) * twBig * starPhase);</code></pre>
+		  
+			<p>
+			  And we added this line for stars to fade in and out smoothly:
+			</p>
+			<pre><code>float starPhase = max(0.0, (0.6 - dayFrac) / 0.6);</code></pre>
 	
 
 		<h2>Problems Encountered & Solutions</h2>
