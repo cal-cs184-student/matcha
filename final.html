@@ -130,6 +130,17 @@
 			game without touching any code. A shader pack, by contrast, lives in the root level directory <code>shaderpacks/</code>. It contains <code>GLSL</code> files (<code>.vsh</code> for vertex, .<code>fsh</code> for fragment) under a <code>shaders/</code> 
 			folder, plus a <code>shaders.properties</code> files that tells OptiFine which stages (<code>gbuffers_terrain</code>, <code>gbuffers_entities</code>, <code>composite</code>, etc.) should use which programs. </p>
 
+			<table style="width: 100%; text-align: center; border-collapse: collapse; margin-top: 0cm;">
+				<tr>
+				<td style="text-align: center;">
+				  <img src="imgs/textures_file_explorer_candy.png" width="300px"/>
+				  <figcaption>Candy theme textures in <code>assets/minecraft/textures/block/</code></figcaption>
+				</td>
+				<td style="text-align: center;">
+				  <img src="imgs/textures_file_explorer_japan.png" width="300px"/>
+				  <figcaption>Japan theme textures in <code>assets/minecraft/textures/block/</code></figcaption>
+				</td>
+					
 		<p>
 			OptiFine provides the bridge between Mojang’s fixed rendering pipeline and our custom code. At runtime it injects helpful uniforms (<code>worldTime</code>, <code>sunPosition</code>, <code>gbufferProjectionInverse</code>, <code>shadowtex0</code>, etc.) 
 			into every stage, allowing us to reconstruct world space positions, sample depth buffers, or query the current biome without external libraries. Each stage writes its results to a numbered colortexN. Later 
@@ -167,6 +178,52 @@
 		<td style="text-align: center;">
 				  <img src="imgs/peppermint_leaf.png" width="300px"/>
 				  <figcaption>Peppermint Leaf</figcaption>
+				</td>
+				</tr>
+			  </table>
+			</div>
+
+			<div style="display: flex; flex-direction: column; align-items: center;">
+			  <table style="width: 100%; text-align: center; border-collapse: collapse; margin-top: 0cm;">
+				<tr>
+				<td style="text-align: center;">
+				  <img src="imgs/candy_1.png" width="300px"/>
+				  <figcaption>Rendered view of candy theme (view #1)</figcaption>
+				</td>
+				<td style="text-align: center;">
+				  <img src="imgs/candy_2.png" width="300px"/>
+				  <figcaption>Rendered view of candy theme (view #2)</figcaption>
+				</td>
+				<td style="text-align: center;">
+				  <img src="imgs/candy_3.png" width="200px"/>
+				  <figcaption>Rendered view of candy theme (view #3)</figcaption>
+				</td>
+		<td style="text-align: center;">
+				  <img src="imgs/candy_4.png" width="300px"/>
+				  <figcaption>Rendered view of candy theme (view #4)</figcaption>
+				</td>
+				</tr>
+			  </table>
+			</div>
+
+								<div style="display: flex; flex-direction: column; align-items: center;">
+			  <table style="width: 100%; text-align: center; border-collapse: collapse; margin-top: 0cm;">
+				<tr>
+				<td style="text-align: center;">
+				  <img src="imgs/japan_1.png" width="300px"/>
+				  <figcaption>Rendered view of japan theme (view #1)</figcaption>
+				</td>
+				<td style="text-align: center;">
+				  <img src="imgs/japan_2.png" width="300px"/>
+				  <figcaption>Rendered view of japan theme (view #2)</figcaption>
+				</td>
+				<td style="text-align: center;">
+				  <img src="imgs/japan_3.png" width="200px"/>
+				  <figcaption>Rendered view of japan theme (view #3)</figcaption>
+				</td>
+		<td style="text-align: center;">
+				  <img src="imgs/japan_4.png" width="300px"/>
+				  <figcaption>Rendered view of japan theme (view #4)</figcaption>
 				</td>
 				</tr>
 			  </table>
@@ -640,21 +697,22 @@ Some techniques we employed to do this were: avoiding the use of texture lookups
 	<ul>
 		<li>Created prototype of Japan-themed world with cherry blossom trees in Blockbench</li>
 		<li>Coded animation of trees swaying in <code>gbuffers_terrain.vsh</code></li>
-		<li>Contributed to writeup, video, and slides</li>
+		<li>Contributed to writeup, presentation video, and slides</li>
 	  </ul>
 
 	<strong>Eshani Jha:</strong> 
 	<ul>
-		<li>Created textures for Candy theme (trees, paths, sand) in Blockbench</li>
+		<li>Created all textures for Candy and Blended Fantasy themes (trees, paths, gravel, sand, etc.) in Blockbench</li>
 		<li>Coded reflective pink sea in <code>gbuffers_water.vsh</code>, <code>gbuffers_water.fsh</code>, <code>final.fsh</code>, <code>final.vsh</code></li>
+		<li>Coded pastel sky in <code>gbuffers_skybasic.vsh</code>, <code>gbuffers_skybasic.fsh</code>, <code>composite.fsh</code>
 		<li>Coded stars and comets in <code>gbuffers_skybasic.vsh</code>, <code>gbuffers_skybasic.fsh</code>, <code>composite.fsh</code>, <code>composite.vsh</code></li>
-		<li>Contributed to writeup, video, and slides</li>
+		<li>Contributed to writeup, world render gifs/videos, presentation video, and slides</li>
 	  </ul>
 	<strong>Malavikha Sudarshan:</strong>
 	<ul>
 		<li>Created textures for Japan theme (trees, paths) in Blockbench</li>
 		<li>Compiled writeup, images, and videos into webpage</li>
-		<li>Contributed to writeup, video, and slides</li>
+		<li>Contributed to writeup, presentation video, and slides</li>
 	  </ul>
 
 </body>
