@@ -1,62 +1,93 @@
 #version 120
+// ---------------------------------------------------------------------------
+//  Candyland composite  ✧  bright pastel lighting & fog
+// ---------------------------------------------------------------------------
 
 varying vec2 TexCoords;
 
-uniform sampler2D colortex0;
-uniform sampler2D colortex1;
-uniform sampler2D colortex2;
+uniform sampler2D colortex0;   // albedo (sRGB)
+uniform sampler2D colortex1;   // normal (RGB packed)
+uniform sampler2D colortex2;   // light-map coords
 uniform sampler2D depthtex0;
-uniform int worldTime;
+
+uniform int   worldTime;
 uniform float near;
 uniform float far;
 
 /* DRAWBUFFERS:0 */
 
-void main() {
-    vec3 Albedo = pow(texture2D(colortex0, TexCoords).rgb, vec3(2.2));
-    vec3 Normal = normalize(texture2D(colortex1, TexCoords).rgb * 2.0 - 1.0);
-    vec2 LightmapCoords = texture2D(colortex2, TexCoords).rg;
-    float Depth = texture2D(depthtex0, TexCoords).r;
+// ---------------------------------------------------------------------------
+// Helpers
+// ---------------------------------------------------------------------------
+vec3 toLinear (vec3 c) { return pow(c, vec3(2.2)); }
+vec3 toSRGB   (vec3 c) { return pow(c, vec3(1.0/2.2)); }
 
-    if (Depth == 1.0) {
-        // Sky pixel, just show albedo
-        gl_FragData[0] = vec4(Albedo, 1.0);
-        return;
-    }
+// simple pastel-LUT fudge – pulls tones gently to pink / lavender
+vec3 pastelLUT(vec3 c)
+{
+    // bias hue towards pink (raise R & B a touch, lower G a touch)
+    return clamp(vec3(c.r*1.04 + 0.03,
+                      c.g*0.96 - 0.02,
+                      c.b*1.06 + 0.04), 0.0, 1.0);
+}
 
-    float sunAngle = float(worldTime) / 24000.0 * 6.28318; // 0 to 2PI
-    float dayBlend = (cos((sunAngle - 3.14159)) + 1.0) * 0.5;
+// convert depth to linear eye-space Z
+float linearDepth(float ndc)
+{
+    float z = ndc*2.0 - 1.0;
+    return 2.0*near*far / (far + near - z*(far-near));
+}
 
-    vec3 pastelDay   = vec3(1.0, 0.9, 0.95);  // Light pink
-    vec3 pastelNight = vec3(0.85, 0.8, 1.0);  // Light purple
+// ---------------------------------------------------------------------------
+// Main
+// ---------------------------------------------------------------------------
+void main()
+{
+    // -----------------------------------------------------------------------
+    //  Inputs
+    // -----------------------------------------------------------------------
+    vec3  albedoSRGB  = texture2D(colortex0, TexCoords).rgb;
+    vec3  albedo      = toLinear(albedoSRGB);                 // linear space
+    vec3  normal      = normalize(texture2D(colortex1, TexCoords).rgb*2.0-1.0);
+    vec2  lmUV        = texture2D(colortex2, TexCoords).rg;
+    float depthNDC    = texture2D(depthtex0, TexCoords).r;
 
-    vec3 ambientColor = mix(pastelNight, pastelDay, dayBlend);
+    // sky pixel?  show pink sky as-is and quit
+    if (depthNDC >= 0.999) { gl_FragData[0]=vec4(albedoSRGB,1.0); return; }
 
-    //⬇️lightmap override: keep very bright pastel lighting, ignore dark shadows
-    float blockLight = max(LightmapCoords.x, 0.4); // Force minimum blocklight
-    float skyLight = max(LightmapCoords.y, 0.6);   // Force minimum skylight
+    // -----------------------------------------------------------------------
+    //  Time-of-day factors
+    // -----------------------------------------------------------------------
+    float angle = float(worldTime)/24000.0 * 6.28318;          // 0 – 2π
+    float dayL  = (cos(angle-3.14159)+1.0)*0.5;                // 0 night →1 day
 
-    vec3 lighting = (ambientColor * 1.2) * (blockLight * 0.5 + skyLight * 0.5);
+    // brighter pastel palettes
+    vec3 dayH   = vec3(1.04,0.94,1.05);   // horizon tint by day
+    vec3 nightH = vec3(0.85,0.80,1.00);   // horizon tint by night
+    vec3 ambientColor = mix(nightH, dayH, dayL);
 
-    vec3 sunDirection = normalize(vec3(0.2, 1.0, 0.2));
-    float sunDiffuse = max(dot(Normal, sunDirection), 0.0);
+    // -----------------------------------------------------------------------
+    //  Decode / tweak lightmap  (simple pastel bias)
+    // -----------------------------------------------------------------------
+    float blockL = max(lmUV.x, 0.50);  // enforce lighter minimum
+    float skyL   = max(lmUV.y, 0.70);
 
-    lighting += ambientColor * sunDiffuse * 0.4;
+    // base ambient term – quite high so shadows never crush
+    vec3 lighting = ambientColor * (0.55*blockL + 0.65*skyL);
 
-    //blend
-    vec3 finalColor = Albedo * lighting;
+    // a soft directional boost (sun / moon)
+    vec3 sunDir   = normalize(vec3(0.15, 1.0, 0.25));
+    float diffuse = max(dot(normal,sunDir), 0.0);
+    lighting     += ambientColor * diffuse * 0.6;
 
-    //BOOST pastel brightness for grass/leaves etc
-    finalColor = mix(finalColor, vec3(1.0, 0.9, 1.0), 0.2);
+    // -----------------------------------------------------------------------
+    //  Compose
+    // -----------------------------------------------------------------------
+    vec3 litLinear = albedo * lighting;
 
-    //light fog
-    float z = Depth * 2.0 - 1.0;
-    float linearDepth = (2.0 * near * far) / (far + near - z * (far - near));
-    float fogFactor = clamp((linearDepth - 48.0) / (150.0 - 48.0), 0.0, 1.0);
+    // apply gentle LUT for extra pastel pop
+    vec3 litSRGB   = toSRGB(litLinear);
+    litSRGB        = mix(litSRGB, pastelLUT(litSRGB), 0.35); // 35 % pastel bias
 
-    vec3 fogColor = mix(vec3(1.0, 0.85, 1.0), vec3(0.8, 0.7, 0.95), dayBlend);
-
-    vec3 foggedColor = mix(finalColor, fogColor, fogFactor);
-
-    gl_FragData[0] = vec4(foggedColor, 1.0);
+    gl_FragData[0] = vec4(finalColor,1.0);
 }
