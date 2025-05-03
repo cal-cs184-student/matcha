@@ -173,60 +173,127 @@
 			</div>
 
 			<h3>Pink seawater with reflection</h3>
-			<p>
-			  We implemented the pink seawater with reflections by simulating pseudo-normal vectors of the water using cosine and sine functions and using that to calculate the Fresnel term. The Fresnel term approximates reflectivity based on view angle, with Shlick approximation:
-			</p>
-		  
-			<pre><code>float fresnel(vec3 N, vec3 V) {
-			float c = clamp(dot(N, V), 0.0, 1.0);
-			return 0.06 + (1.0 - 0.06) * pow(1.0 - c, 5.0);
-		  }</code></pre>
-		  
-			<p>
-			  We lightly ray traced in 2D (30 steps):
-			</p>
-			<pre><code>vec3 traceSSR(vec2 uv, vec2 dir) {
-			for (int i = 0; i < 30; ++i) {
-			  uv += dir * 0.003;
-			  if (texture2D(depthtex0, uv).r < 1.0)
-				return texture2D(colortex0, uv).rgb;
-			}
-			return vec3(0.0);
-		  }</code></pre>
-		  
-			<p>
-			  Water and specular lighting were blended based on the Fresnel term:
-			</p>
-			<pre><code>vec3 blinnSpec(vec3 N, vec3 L, vec3 V) {
-			vec3 H = normalize(L + V);
-			float s = pow(max(dot(N, H), 0.0), 96.0);
-			return vec3(s);
-		  }</code></pre>
-		  
-			<p>
-			  Main logic:
-			</p>
-			<pre><code>vec3 N = waterNormal(gl_FragCoord.xy / viewRes * 4.0, float(worldTime));
-		  vec3 V = normalize(viewDir);
-		  vec2 Ruv = reflect(V, N).xy;
-		  float F = fresnel(N, V);
-		  vec3 refl = traceSSR(gl_FragCoord.xy / viewRes, Ruv);
-		  vec3 spec = blinnSpec(N, sunDir, V);
-		  vec3 pink = vec3(1.0, 0.55, 0.75);
-		  vec3 noise = vec3(hash(gl_FragCoord.xy * 21.7) * 0.02);
-		  vec3 colour = mix(pink, refl, F) + spec + noise;
-		  gl_FragColor = vec4(normalize(colour), 1.0);</code></pre>
-		  
-			<p>
-			  Vertex shader input:
-			</p>
-			<pre><code>// gbuffers_water.vsh
-		  varying vec3 viewDir;
-		  void main() {
-			vec4 pos = gl_ModelViewMatrix * gl_Vertex;
-			viewDir = -pos.xyz;
-			gl_Position = ftransform();
-		  }</code></pre>
+
+<p>
+  The vertex shader serves to return a consistent view vector to the fragment
+  stage.  We transform each vertex into eye space, negate the position, and return the vector
+	to the rasteriser.  Re‑using the interpolated value avoids recomputing the
+  eye‑space ray per pixel and keeps reflections crack‑free across triangle seams.
+</p>
+
+<pre><code class="language-glsl">// gbuffers_water.vsh
+varying vec3 viewDir;
+void main() {
+    vec4 pos  = gl_ModelViewMatrix * gl_Vertex;
+    viewDir   = -pos.xyz;          // eye → fragment
+    gl_Position = ftransform();
+}</code></pre>
+
+<p>
+  We generated the water’s surface normals analytically rather than with a tiled texture. 
+	Two orthogonal wave sets (<code>sin</code> function in the <code>x‑</code>direction and <code>cos</code> function in the <code>y‑</code>direction. Their spatial frequencies are chosen specifically as 6.0 and 6.5 to ensure no common integer divisors.
+	As a result, the wave pattern never repeats across the plane, so the surface remains free of visible tiling artifacts at any camera distance. The slopes of&nbsp;<code>sin(x)</code> and&nbsp;<code>cos(y)</code>
+    give&nbsp;∂h/∂x and&nbsp;∂h/∂y. The slope vector is then normalized to a unit normal. This normalization keeps the waves visually gentle.
+</p>
+
+<pre><code class="language-glsl">vec3 waterNormal(vec2 uv, float t) {
+    float a1 = sin(uv.x * 6.0 + t * 0.7);
+    float a2 = cos(uv.y * 6.5 + t * 0.9);
+    vec2  dH = vec2(a1, a2) * 0.12;     // slope
+    return normalize(vec3(-dH, 1.0));   // slope → normal
+}</code></pre>
+
+<p>
+    Reflectivity is computed with Schlick’s approximation, expressed as
+  <code>F(θ) = F₀ + (1 − F₀) · (1 − cos θ)<sup>5</sup></code>
+  where <code>cos θ = dot(N, V)</code>.  We set the base reflectance
+  <code>F₀</code> to 0.06, which is slightly higher than the physical value for seawater
+  (~0.02). This is to prevent the ocean from collapsing into a uniformly pink surface
+  when the camera looks straight down. Because the term
+  <code>(1 − cos θ)<sup>5</sup></code> falls off steeply, the mirror
+  contribution remains negligible until <code>dot(N, V)</code> drops below 0.3. 
+	Beyond that angle it rises rapidly.  The result matches real water, which
+  turns glassy at grazing incidence while retaining colour and translucency
+  under near‑normal viewing. A caveat is that exactly at the sky-water intersection plane, the views are distorted.
+
+</p>
+
+<pre><code class="language-glsl">float fresnel(vec3 N, vec3 V) {
+    float c = clamp(dot(N, V), 0.0, 1.0);        // cos θ
+    return 0.06 + (1.0 - 0.06) * pow(1.0 - c, 5.0);
+}</code></pre>
+
+<p>
+   Screen‑space reflections are generated with a fixed 30‑step UV march.  Each step
+  advances the ray by <code>0.003</code> texture units, which corresponds to roughly
+  two pixels at 1920 × 1080.  Fewer than
+  20 steps left visible reflection gaps near shorelines, while more than 30 offered
+  no noticeable improvement.
+  Using a constant loop length also prevents dynamic branching.
+</p>
+
+<pre><code class="language-glsl">vec3 traceSSR(vec2 uv, vec2 dir) {
+    for (int i = 0; i < 30; ++i) {
+        uv += dir * 0.003;
+        if (texture2D(depthtex0, uv).r < 1.0)
+            return texture2D(colortex0, uv).rgb;
+    }
+    return vec3(0.0);                           // ray missed scene
+}</code></pre>
+
+<p>
+    Specular highlights use the classic Blinn–Phong model, where intensity is driven
+  by <code>(N · H)<sup>n</sup></code>.  Here, <code>N</code> is the surface normal,
+  <code>H = normalize(L + V)</code> is the half‑vector between the light direction
+  <code>L</code> and view direction <code>V</code>, and <code>n</code> controls how
+  the energy is focused.  We experimented with <code>n</code> in test builds and found
+  three distinct behaviours: values below 60 spread the lobe so wide the water
+  looked like plastic vinyl while values above 110 collapsed the lobe into a single
+  pixel and produuced needle‑thin “LED sparkles” that blew out during the bloom pass.
+  Setting <code>n = 96</code> kept the highlight
+  bright and camera‑responsive while maintaining a smooth
+  blend.  Because the highlight iss added after
+  Fresnel mixing, it never washes out the reflection and also remains visible even when the sun sits close to zenith.
+</p>
+
+<pre><code class="language-glsl">vec3 blinnSpec(vec3 N, vec3 L, vec3 V) {
+    vec3  H = normalize(L + V);
+    float s = pow(max(dot(N, H), 0.0), 96.0);
+    return vec3(s);
+}</code></pre>
+
+<p>
+  The water’s final color comes together in four stages. First, we blend the base
+  pink dye with the screen‑space reflection, using the Fresnel weight to
+  decide how much mirror image to admit. Next we add the Blinn–Phong sun flash,
+  followed by a 2% hash‑based noise term that breaks up 8‑bit banding in broad
+  pastel areas. Finally, we normalise the RGB vector. If the
+  combined reflection and specular push any channel above 1.0, the uniform
+  scale‑down preserves the hue instead of clipping a single component.
+</p>
+
+<pre><code class="language-glsl">vec3 N   = waterNormal(gl_FragCoord.xy / viewRes * 4.0, float(worldTime));
+vec3 V   = normalize(viewDir);
+vec2 Ruv = reflect(V, N).xy;
+
+float F   = fresnel(N, V);
+vec3 refl = traceSSR(gl_FragCoord.xy / viewRes, Ruv);
+vec3 spec = blinnSpec(N, sunDir, V);
+
+vec3 pink  = vec3(1.0, 0.55, 0.75);                // dye colour
+vec3 noise = vec3(hash(gl_FragCoord.xy * 21.7) * 0.02);
+
+vec3 colour = mix(pink, refl, F) + spec + noise;
+gl_FragColor = vec4(normalize(colour), 1.0);       // HDR safe
+</code></pre>
+
+<p>
+  The grain uses an inline hash instead of a 64×64 blue‑noise texture, avoiding an
+  extra sampler and preventing shader‑cache stalls reported on some Intel GPUs.
+  Because the amplitude is so small, the noise disappears once bloom is applied,
+  serving only as an anti‑banding aid.
+</p>
+
 		  		  
 			<h3>Swaying Trees</h3>
 			<p>
@@ -398,8 +465,30 @@ float h      = hash(floor(starUV));      // deterministic per cell
 		</p>
 
 		<h3>Knowing Which Files To Edit</h3>
-		<p> When tinting the sky, we originally just tried to change the main function in gbuffers_sky.fsh to return the color pink, using the logic that the function would just return a vector that mapped to the color pink. But it wasn’t rendering quickly, and through referencing code from Minecraft Shader Wiki, we realized none of those files actually changed gbuffers_sky.fsh and they actually overwrote the sky variable in the composite.fsh file.  		</p>
+		  Our first attempt at a pastel sky was to hard‑code a pink return value in
+  <code>gbuffers_sky.fsh</code>, assuming that file controlled the dome colour.
+  Nothing changed in‑game, which told us the shader was never being executed.
+  After cross‑checking the Minecraft Shader Wiki and inspecting the
+  <code>shaders.properties</code> manifest, we discovered that OptiFine’s default
+  pipeline actually calls <code>gbuffers_skybasic.fsh</code> for the sky pass and
+  then overwrites the result inside <code>composite.fsh</code> when it blends the
+  final frame.  In other words, our pink vector was rendered, but the composite
+  stage immediately replaced it unless the fragment’s depth equalled 1.  To fix this, we
+		edited
+  <code>shaders.properties</code> to point to othe appopriate edited file and added an early‑exit
+  clause in <code>composite.fsh</code> that leaves sky pixels untouched
+  (<code>if(depth == 1.0) return;</code>).
 
+		  Another example is that after implementing our hash‑based starfield, the dots appeared but stayed at a
+  constant brightness. Researching the issue, we discovered that integer world‑time ticks directly inside
+  <code>sin()</code> caused the phase to advance by exactly one radian every
+  40 ticks, which is too slow to be perceptible.  Converting the tick counter to
+  a floating‑point value and scaling it (<code>worldTime * 0.025</code>)
+  restored sub‑frame resolution.  We also discovered that reusing the same
+  <code>starPhase</code> scalar for both appearance and brightness let stars
+  fade in at dusk but then plateau. So, we introduced a second multiplier
+  (<code>tw</code>) driven solely by the sine wave. 
+		
 		<h3>Lessons Learned</h3>
 		<p>One of the first lessons that we learned was how to familiarize ourselves with the relevant software, shader documentation and GLSL language for our project. To set up rendering in Minecraft, we spent a decent amount of time researching which software tools to install (e.g. Minecraft, Optifine, Forge), and ultimately chose Minecraft with Optifine because of its built-in support for coding new GLSL shaders. It took us a couple of tries to install and set up compatible versions of Minecraft and Optifine, but this whole process taught us how to look up available resources and piece together the ones that best suited our goals. We also looked into the different Minecraft shader files and learned the order in which they render in a game – by taking the time to study the existing codebase and rendering engine, we got a good idea of exactly which shaders to edit for each of our ideas. While implementing our ideas, we learned to apply the concepts that we learned in class about texture mapping, lighting (Blinn Phong shading, one-bounce global illumination, reflection across materials) and shaders (cloth simulation vertex and fragment). We were excited to build upon these, such as trying to implement reflection off of a water surface while following Minecraft’s specific documentation, or simulating swaying trees by first editing the vertex shader for tree leaves to then displace and pass on per-vertex positions to the corresponding fragment shader.		</p>
 
@@ -495,17 +584,9 @@ float h      = hash(floor(starUV));      // deterministic per cell
 				</div>
 				
 				<p>
-					One of our main goals with the rendering effects and shaderpacks was to keep everything running smoothly in real time—even with added features like colorful clouds, soft fog, and dynamic skies. From the start, we set a hard cap: each shader pass couldn't take more than about <strong>0.2 ms</strong> on a 1080p screen, so we could consistently hit <strong>60 FPS</strong> (i.e., one frame every 16 ms).
-				  </p>
-				
-				  <p>
-					To stick to this limit, we used a few clever tricks:
-					<ul>
-					  <li><strong>No texture lookups</strong> for noise or height—just math. All clouds and stars use lightweight value-noise or trig functions.</li>
-					  <li><strong>No expensive loops</strong>—we capped things like SSR (screen-space reflection) at 30 steps max and avoided loops entirely for stars and clouds.</li>
-					  <li><strong>Reused variables</strong>—we calculate values like <code>dayFrac</code> (day/night blend factor) once and share it across shaders for fog, horizon color, and clouds.</li>
-					</ul>
-				  </p>
+				One of our main goals with the rendering effects and shaderpacks was to keep everything running within a reasonable frame rate per second (FPS) rate.
+From the beginning, we set a limit that each shader pass should not take more than about 0.2 ms on a 1080p screen, so we could consistently hit 60 FPS (i.e., one frame every 16 ms).
+Some techniques we employed to do this were: avoiding the use of texture lookups for noise or height, using sinusoidal functions to model motion, not using expensive loops, and limiting the screen-space reflection algorithm at 30 steps maximum.	  </p>
 				
 				  <h3>Real-World Performance</h3>
 				
