@@ -273,86 +273,80 @@
 		<p>To create a pastel themed sky that has a blend of two colors and changes according to whether it is night or day in Minecraft, we used a cosine function to map Minecraft’s internal clock, represented by my <code>worldTime</code>, to a specific time of the day. We defined what we wanted the top of the sky (the zenith) and the horizon to look like (either cotton-candy pink and soft lavender in the morning and pastel purplish pink and deep lavender in the night, for the horizon and zenith respectively), and then interpolated across these values using the output of the cosine function as our parameter. This final interpolated color is outputted as the color of our sky. Definitely a really pretty implementation of the concept of linear interpolation that we learned about in class! </p>
 
 		<h3>Fog and Clouds</h3>
-		
 		<p>
-	The logic for this feature lives in two spots:
-		  </p>
-		  <ul>
-			<li><code>gbuffers_sky.fsh</code> – draws horizon-to-zenith gradient and first-pass clouds.</li>
-			<li><code>composite.fsh</code> – applies depth-aware fog after every opaque surface has rendered.</li>
-		  </ul>
-		
-		  <h4>First-pass Clouds in <code>gbuffers_sky.fsh</code></h3>
-		  <p>
-			We reused the same 2D value-noise routine that shaped the night-time starfield but samplde at one-quarter the frequency to create broad, slow-moving puffs:
-		  </p>
-		
-		  <pre><code>vec2  uv   = (frag.xy + vec2(worldTime*0.00003, 0.0)) * 0.0015;
-		float density = noise(uv) * noise(uv*2.0);      	// fractal detail
-		float mask = smoothstep(0.45, 0.65, density);  // soft edge
-		</code></pre>
-		
-		  <p>
-			We then blended a teal-tinted daytime colour into the sky gradient:
-		  </p>
-		
-		  <pre><code>vec3 cloudDay   = vec3(0.80, 1.00, 0.95);
-		vec3 cloudNight = vec3(0.15, 0.25, 0.35);
-		vec3 cloudCol   = mix(cloudNight, cloudDay, dayFrac);
-		
-		skyCol = mix(skyCol, cloudCol, mask * 0.6); // 60% opacity cap
-		</code></pre>
-		
-		  <p>
-			The 60% opacity cap keeps clouds translucent enough to see stars peek through at dusk.
-		  </p>
-		
-		  <h3>Exponential Fog in <code>composite.fsh</code></h3>
-		  <p>
-			By the time <code>composite.fsh</code> ran, the G-buffer gave us per-pixel linear depth z in view space. We converted metres to a dimensionless fog factor:
-		  </p>
-		
-		  <pre><code>float fogFactor = 1.0 - exp(-z * fogDensity);   // e‑λz
-		fogFactor = clamp(fogFactor, 0.0, 1.0);
-		</code></pre>
-		
-		  <p>
-			<code>fogDensity</code> is time-of-day aware:
-		  </p>
-		
-		  <pre><code>float fogDensity = mix(0.002, 0.0005, dayFrac); // thick at night
-		</code></pre>
-		
-			  <p>
-			We want the mist to inherit ambient skylight so it never messed up with our colour palette. This meant sampling the same horizon/zenith blend we already computed for the sky, but evaluating it at the fragment’s screen-space y:
-		  </p>
-		
-		  <pre><code>float v = frag.y / viewHeight;
-		vec3  fogCol = mix(horizonCol, zenithCol, v);   // pulled from sky pass
-		</code></pre>
-		
-		  <p>
-			Because both shaders share the day/night maths (<code>dayFrac</code>), the fog subtly reddened at sunset and turns turquoise by midnight, syncing with the celestial dome.
-		  </p>
-		
-		  <p>
-			Finally, the compositor blends world colour (scene.rgb) with <code>fogCol</code>, multiplies in the cloud alpha (so distant mountains disappear behind clouds), and writes to the framebuffer:
-		  </p>
-		
-		  <pre><code>vec3  scene = texture2D(colortex0, screenUV).rgb;
-		vec3  fogged = mix(scene, fogCol, fogFactor);
-		
-		float cloudShadow = texture2D(skySampler, screenUV).a;
-		fogged = mix(fogged, fogged*0.9, cloudShadow*0.4);
-		
-		gl_FragColor = vec4(fogged, 1.0);
-		</code></pre>
+		  This feature lives in two shaders:
+		</p>
+		<ul>
+		  <li><code>gbuffers_sky.fsh</code> – draws the horizon-to-zenith sky gradient and first-pass clouds.</li>
+		  <li><code>composite.fsh</code> – applies fog based on depth after rendering opaque geometry.</li>
+		</ul>
+	  
+		<h4>First-Pass Clouds (<code>gbuffers_sky.fsh</code>)</h4>
+		<p>
+		  To simulate fluffy clouds, we reused the 2D value noise from our starfield shader but sampled at a lower frequency to create slow, large-scale puffs. We multiplied two octaves of noise for more natural variation and softened the edges using <code>smoothstep</code>.
+		</p>
+		<pre><code>vec2 uv = (frag.xy + vec2(worldTime * 0.00003, 0.0)) * 0.0015;
+	  float density = noise(uv) * noise(uv * 2.0);          // fractal detail
+	  float mask = smoothstep(0.45, 0.65, density);         // soft edge
+	  </code></pre>
+	  
+		<p>
+		  We then blended in a cloud color based on time of day. The clouds are teal during the day and a muted blue-grey at night:
+		</p>
+		<pre><code>vec3 cloudDay = vec3(0.80, 1.00, 0.95);
+	  vec3 cloudNight = vec3(0.15, 0.25, 0.35);
+	  vec3 cloudCol = mix(cloudNight, cloudDay, dayFrac);
+	  
+	  skyCol = mix(skyCol, cloudCol, mask * 0.6); // 60% opacity cap
+	  </code></pre>
+	  
+		<p>
+		  This 60% cap makes sure clouds remain translucent enough to show stars during dusk or dawn.
+		</p>
+	  
+		<h4>Exponential Fog (<code>composite.fsh</code>)</h4>
+		<p>
+		  We added distance-based fog in the composite pass using view-space depth from the G-buffer. The fog strength was computed using an exponential function:
+		</p>
+		<pre><code>float fogFactor = 1.0 - exp(-z * fogDensity);  // e^(-λz)
+	  fogFactor = clamp(fogFactor, 0.0, 1.0);
+	  </code></pre>
+	  
+		<p>
+		  Fog is denser at night and lighter during the day, controlled by <code>dayFrac</code>:
+		</p>
+		<pre><code>float fogDensity = mix(0.002, 0.0005, dayFrac); // thick at night
+	  </code></pre>
+	  
+		<p>
+		  To keep the fog color consistent with the sky, we sampled the same horizon-to-zenith gradient used for the sky shader, using screen-space height:
+		</p>
+		<pre><code>float v = frag.y / viewHeight;
+	  vec3 fogCol = mix(horizonCol, zenithCol, v);  // pulled from sky pass
+	  </code></pre>
+	  
+		<p>
+		  Since both the sky and fog use <code>dayFrac</code>, the fog transitions naturally—reddish at sunset, teal at midnight.
+		</p>
+	  
+		<h4>Final Fog Blend</h4>
+		<p>
+		  The fog was blended with the scene color, and cloud shadows were optionally darkened to make distant terrain fade under clouds:
+		</p>
+		<pre><code>vec3 scene = texture2D(colortex0, screenUV).rgb;
+	  vec3 fogged = mix(scene, fogCol, fogFactor);
+	  
+	  float cloudShadow = texture2D(skySampler, screenUV).a;
+	  fogged = mix(fogged, fogged * 0.9, cloudShadow * 0.4);
+	  
+	  gl_FragColor = vec4(fogged, 1.0);
+	  </code></pre>
 	
 
 		<h2>Problems Encountered & Solutions</h2>
 
 		<h3>Terrain Disappearing</h3>
-		<p>Another error that we ran into was the terrain going missing while we were editing the vertex shaders. We tackled this by debugging exactly how we were editing the vertex positions, making sure that we were computing in the right spaces and scaling properly. For example, we realized that the line <code>gl_Position = ftransform();</code> was actually short for projecting a vertex from object/model space into camera space, then changed our approach accordingly to displace our vertices before this projection step.</p>
+		<p>One error that we ran into was the terrain going missing while we were editing the vertex shaders. We tackled this by debugging exactly how we were editing the vertex positions, making sure that we were computing in the right spaces and scaling properly. For example, we realized that the line <code>gl_Position = ftransform();</code> was actually short for projecting a vertex from object/model space into camera space, then changed our approach accordingly to displace our vertices before this projection step.</p>
 		<img src="imgs/no_terrain_error.png">
 
 		<h3>Excess Blur Effect</h3>
@@ -456,7 +450,38 @@
 				  </table>
 				</div>
 				
-			<p>We also intended on maintaining a high frame rate per second (FPS) </p>
+				<p>
+					One of our main goals with the Candy-Sky rendering effects was to keep everything running smoothly in real time—even with added features like colorful clouds, soft fog, and dynamic skies. From the start, we set a hard cap: each shader pass couldn't take more than about <strong>0.2 ms</strong> on a 1080p screen, so we could consistently hit <strong>60 FPS</strong> (i.e., one frame every 16 ms).
+				  </p>
+				
+				  <p>
+					To stick to this limit, we used a few clever tricks:
+					<ul>
+					  <li><strong>No texture lookups</strong> for noise or height—just math. All clouds and stars use lightweight value-noise or trig functions.</li>
+					  <li><strong>No expensive loops</strong>—we capped things like SSR (screen-space reflection) at 30 steps max and avoided loops entirely for stars and clouds.</li>
+					  <li><strong>Reused variables</strong>—we calculate values like <code>dayFrac</code> (day/night blend factor) once and share it across shaders for fog, horizon color, and clouds.</li>
+					</ul>
+				  </p>
+				
+				  <h3>Real-World Performance</h3>
+				
+				  <p>
+					We tested our shaders on two systems:
+				  </p>
+				  <ul>
+					<li><strong>NVIDIA GeForce GTX 1660 (6 GB)</strong> – mid-range GPU, tested in Minecraft 1.20.4 with OptiFine G10</li>
+					<li><strong>AMD Ryzen 7 7840U (780M integrated graphics)</strong> – no discrete GPU</li>
+				  </ul>
+				
+				  <p>
+					Both systems kept frame rates well above 60 FPS, even in high-stress scenes (lots of foliage, water reflections, or combat particles).
+				  </p>
+				
+				  <img src="imgs/62_fps.png" alt="Frame rate holding at 62 FPS in a complex scene">
+				  <p><em>Frame rate steady at 62 FPS on integrated graphics</em></p>
+				
+				  <img src="imgs/97_fps.png" alt="Frame rate spiking to 97 FPS in a simpler scene">
+				  <p><em>Frame rate peaks at 97 FPS on mid-range GPU</em></p>
 	
 		<h2>References</h2>
 		<ul>
