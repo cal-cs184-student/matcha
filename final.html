@@ -264,8 +264,8 @@
 				and color difference respectively. We also compute a weighted average of these samples and adjust the tone by 
 				raising the result to the 0.9<sup>th</sup> power before setting it as the pixel’s final texture value.
 			  </p>
-		<h3>Gradient sky that changes color from day to night </h3>
-		<p>To create a pastel themed sky that has a blend of two colors and changes according to whether it is night or day, we used a cosine function to map Minecraft’s internal clock represented by <code>worldTime</code> to a specific time of the day. We defined what we wanted the top of the sky (the zenith) and the horizon to look like (either cotton-candy pink and soft lavender in the morning and pastel purplish pink and deep lavender in the night, for the horizon and zenith respectively). Then, we interpolated across these values using the output of the cosine function as our parameter. This final interpolated color is outputted as the color of our sky. Definitely a really pretty implementation of the concept of linear interpolation that we learned about in class! </p>
+		<h3>Gradient sky that changes color from day to night (green sky for japan and pink sky for candy)</h3>
+		<p>To create a pastel themed sky that has a blend of two colors and changes according to whether it is night or day, we used a cosine function to map Minecraft’s internal clock represented by <code>worldTime</code> to a specific time of the day. We defined what we wanted the top of the sky (the zenith) and the horizon to look like (e.g. cotton-candy pink and soft lavender in the morning and pastel purplish pink and deep lavender in the night for the candy theme). Then, we interpolated across these values using the output of the cosine function as our parameter. This final interpolated color is outputted as the color of our sky. Definitely a really pretty implementation of the concept of linear interpolation that we learned about in class! </p>
 
 		<h3>Fog and Clouds</h3>
 		<p>
@@ -472,7 +472,7 @@
 				</div>
 				
 				<p>
-					One of our main goals with the Candy-Sky rendering effects was to keep everything running smoothly in real time—even with added features like colorful clouds, soft fog, and dynamic skies. From the start, we set a hard cap: each shader pass couldn't take more than about <strong>0.2 ms</strong> on a 1080p screen, so we could consistently hit <strong>60 FPS</strong> (i.e., one frame every 16 ms).
+					One of our main goals with the rendering effects and shaderpacks was to keep everything running smoothly in real time—even with added features like colorful clouds, soft fog, and dynamic skies. From the start, we set a hard cap: each shader pass couldn't take more than about <strong>0.2 ms</strong> on a 1080p screen, so we could consistently hit <strong>60 FPS</strong> (i.e., one frame every 16 ms).
 				  </p>
 				
 				  <p>
