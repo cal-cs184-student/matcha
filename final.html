@@ -239,6 +239,37 @@
 			</p>
 			<pre><code>float starPhase = max(0.0, (0.6 - dayFrac) / 0.6);</code></pre>
 
+		
+			<h3>Watercolor filter effect</h3>
+
+			<img src="compositefsh for watercolor bilateral.png">
+
+			<img src="watercolrogaussian.png">
+
+			<p>
+				The blurring effect is created from an application of convolution (as learned in Lecture 3), where we use 
+				a 5x5 size kernel to estimate the value of one pixel. For both effects, only the <code>composite.fsh</code> 
+				file was edited, and the <code>shaders.properties</code> file was updated to use the new composite file 
+				instead of the default one.
+			  </p>
+			
+			  <p>
+				For <strong>Gaussian blurring</strong>, the weights in the convolution kernel are determined solely by the 
+				spatial weight, <code>e^((-x² - y²) / 2.0)</code>, where (x, y) represents the pixel associated with that 
+				weight. For each pixel (a, b), we compute a weighted average of all the neighboring pixels’ textures within 
+				a 2-pixel radius surrounding (a, b). Additionally, we raise the result to the 0.9<sup>th</sup> power to make 
+				the image softer. This final result is the final texture for that pixel.
+			  </p>
+			
+			  <p>
+				<strong>Bilateral blurring</strong>, on the other hand, uses weights that correspond to both spatial weight, 
+				<code>e^((-x² - y²) / (2.0 * s₁²))</code>, and color weight, <code>e^((-c²) / (2.0 * s₂²))</code>, where 
+				<code>c</code> represents the difference between the sample color (x, y) and center color (a, b), and 
+				<code>s₁</code> and <code>s₂</code> represent constant factors controlling how much we want to weight spatial 
+				and color difference respectively. We also compute a weighted average of these samples and adjust the tone by 
+				raising the result to the 0.9<sup>th</sup> power before setting it as the pixel’s final texture value.
+			  </p>
+
 		<h2>Problems Encountered & Solutions</h2>
 
 		<h3>Terrain Disappearing</h3>
