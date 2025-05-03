@@ -130,7 +130,8 @@
 			game without touching any code. A shader pack, by contrast, lives in the root level directory <code>shaderpacks/</code>. It contains <code>GLSL</code> files (<code>.vsh</code> for vertex, .<code>fsh</code> for fragment) under a <code>shaders/</code> 
 			folder, plus a <code>shaders.properties</code> files that tells OptiFine which stages (<code>gbuffers_terrain</code>, <code>gbuffers_entities</code>, <code>composite</code>, etc.) should use which programs. </p>
 
-			<table style="width: 100%; text-align: center; border-collapse: collapse; margin-top: 0cm;">
+			<div style="display: flex; flex-direction: column; align-items: center;">
+			  <table style="width: 100%; text-align: center; border-collapse: collapse; margin-top: 0cm;">
 				<tr>
 				<td style="text-align: center;">
 				  <img src="imgs/textures_file_explorer_candy.png" width="300px"/>
@@ -140,6 +141,9 @@
 				  <img src="imgs/textures_file_explorer_japan.png" width="300px"/>
 				  <figcaption>Japan theme textures in <code>assets/minecraft/textures/block/</code></figcaption>
 				</td>
+					</tr>
+			  </table>
+			</div>
 					
 		<p>
 			OptiFine bridges the gap between Mojang’s fixed rendering pipeline and our custom code. At runtime it injects helpful uniforms (<code>worldTime</code>, <code>sunPosition</code>, <code>gbufferProjectionInverse</code>, <code>shadowtex0</code>, etc.) 
