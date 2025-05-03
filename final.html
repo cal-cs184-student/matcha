@@ -76,9 +76,8 @@
 
         <p>GitHub: <a href="https://github.com/cal-cs184-student/matcha">https://github.com/cal-cs184-student/matcha</a></p>
         <p>Website: <a href="https://cal-cs184-student.github.io/matcha/final.html">https://cal-cs184-student.github.io/matcha/final.html</a></p>
-        <!-- <img src="cover.png">  -->
         <p>Final Slides: <a href="https://docs.google.com/presentation/d/1ZaHTSO4sCubKaPMQhuTvd9Z5Uo-jNtgcxodGCnF9MSc/edit?usp=sharing">https://docs.google.com/presentation/d/1ZaHTSO4sCubKaPMQhuTvd9Z5Uo-jNtgcxodGCnF9MSc/edit?usp=sharing</a></p>
-        <p>Final Video: </p>
+        <p>Final Video: <a href="https://youtu.be/S4y190PJRdA">https://youtu.be/S4y190PJRdA</a></p>
  
         <h2>Abstract</h2>
 		<p>In this project, we designed new textures to render in Minecraft using Blockbench. We created two different themes of textures and features: Japan theme and Candy theme. The Japan theme includes textures such as cherry blossom leaves, spiral leaves and koi fish, and features such as a pastel green day sky and swaying trees. The Candy theme includes candy-themed trees and patterned sand, as well as features such as twinkling stars and flashing comets in the night sky, a reflective pink seawater, and a pastel pink day sky with clouds. We also simulated two types of watercolor-effect filters on the rendered scene, implementing Gaussian blurring and bilateral blurring for a color-bleeding effect. </p>
@@ -127,7 +126,7 @@
 		<p>We designed and drew out textures for blocks and modified entities in Blockbench, for both the Candy and Japan-themed world. We set Blockbench’s Preview Scene feature to render and see assets in a simulated game environment before testing it in Minecraft. For our Candy-themed world, we made lollipop swirls, chocolate blocks and other bright, colourful, blocky textures with thick outlines. We also modified an existing entity of the tadpole in Minecraft to create a Lorax-like fish for our candy-themed world.
 			For the Japan-themed world, we made much more subtle, abstract blocks of cobblestone, cherry blossoms, pink water and tree trunks.</p>
 
-			<p>Here are some of the textures we designed (see slides and video for more examples):</p>		
+			<p>Here are some of the textures we designed:</p>		
 			<div style="display: flex; flex-direction: column; align-items: center;">
 			  <table style="width: 100%; text-align: center; border-collapse: collapse; margin-top: 0cm;">
 				<tr>
@@ -151,7 +150,92 @@
 			  </table>
 			</div>
 
-		<h3>Pink seawater with reflection</h3>
+			<h3>Pink seawater with reflection</h3>
+			<p>
+			  We implemented the pink seawater with reflections by simulating pseudo-normal vectors of the water using cosine and sine functions and using that to calculate the Fresnel term. The Fresnel term approximates reflectivity based on view angle, with Shlick approximation:
+			</p>
+		  
+			<pre><code>float fresnel(vec3 N, vec3 V) {
+			float c = clamp(dot(N, V), 0.0, 1.0);
+			return 0.06 + (1.0 - 0.06) * pow(1.0 - c, 5.0);
+		  }</code></pre>
+		  
+			<p>
+			  We lightly ray traced in 2D (30 steps):
+			</p>
+			<pre><code>vec3 traceSSR(vec2 uv, vec2 dir) {
+			for (int i = 0; i < 30; ++i) {
+			  uv += dir * 0.003;
+			  if (texture2D(depthtex0, uv).r < 1.0)
+				return texture2D(colortex0, uv).rgb;
+			}
+			return vec3(0.0);
+		  }</code></pre>
+		  
+			<p>
+			  Water and specular lighting were blended based on the Fresnel term:
+			</p>
+			<pre><code>vec3 blinnSpec(vec3 N, vec3 L, vec3 V) {
+			vec3 H = normalize(L + V);
+			float s = pow(max(dot(N, H), 0.0), 96.0);
+			return vec3(s);
+		  }</code></pre>
+		  
+			<p>
+			  Main logic:
+			</p>
+			<pre><code>vec3 N = waterNormal(gl_FragCoord.xy / viewRes * 4.0, float(worldTime));
+		  vec3 V = normalize(viewDir);
+		  vec2 Ruv = reflect(V, N).xy;
+		  float F = fresnel(N, V);
+		  vec3 refl = traceSSR(gl_FragCoord.xy / viewRes, Ruv);
+		  vec3 spec = blinnSpec(N, sunDir, V);
+		  vec3 pink = vec3(1.0, 0.55, 0.75);
+		  vec3 noise = vec3(hash(gl_FragCoord.xy * 21.7) * 0.02);
+		  vec3 colour = mix(pink, refl, F) + spec + noise;
+		  gl_FragColor = vec4(normalize(colour), 1.0);</code></pre>
+		  
+			<p>
+			  Vertex shader input:
+			</p>
+			<pre><code>// gbuffers_water.vsh
+		  varying vec3 viewDir;
+		  void main() {
+			vec4 pos = gl_ModelViewMatrix * gl_Vertex;
+			viewDir = -pos.xyz;
+			gl_Position = ftransform();
+		  }</code></pre>
+		  		  
+			<h3>Swaying Trees</h3>
+			<p>
+			  To simulate swaying trees, we added sinusoidal displacement in <code>gbuffers_terrain.vsh</code> based on time and horizontal vertex positions. Only leaves are affected using an <code>isLeaf</code> heuristic to modulate the motion.
+			</p>
+		  
+			<h3>Twinkling Stars and Flashing Comets</h3>
+			<p>
+			  Stars were grid-based and hashed to remain stable across frames:
+			</p>
+			<pre><code>float h = hash(floor(starUV));
+		  if (h > 0.982) { /* small star */ }
+		  if (h > 0.9975) { /* big flare */ }</code></pre>
+			<p>
+			  Twinkling effect:
+			</p>
+			<pre><code>float tw   = 0.5 + 0.5 * sin(worldTime*0.025 + h*80.0);
+		  float halo = smoothstep(0.32, 0.0, length(fract(starUV) - 0.5));
+		  skyCol = mix(skyCol, starC, halo * tw * starPhase);</code></pre>
+		  
+			<p>
+			  Large stars add cross flares:
+			</p>
+			<pre><code>float flare = (smoothstep(0.35, 0.0, abs(f.x)) +
+						 smoothstep(0.35, 0.0, abs(f.y))) * 0.5;
+		  skyCol = mix(skyCol, bigC, (halo+flare) * twBig * starPhase);</code></pre>
+		  
+			<p>
+			  Stars fade in and out smoothly:
+			</p>
+			<pre><code>float starPhase = max(0.0, (0.6 - dayFrac) / 0.6);</code></pre>
 
 		<h2>Problems Encountered & Solutions</h2>
 
@@ -170,19 +254,115 @@
 		<p>One of the first lessons that we learned was how to familiarize ourselves with the relevant software, shader documentation and GLSL language for our project. To set up rendering in Minecraft, we spent a decent amount of time researching which software tools to install (e.g. Minecraft, Optifine, Forge), and ultimately chose Minecraft with Optifine because of its built-in support for coding new GLSL shaders. It took us a couple of tries to install and set up compatible versions of Minecraft and Optifine, but this whole process taught us how to look up available resources and piece together the ones that best suited our goals. We also looked into the different Minecraft shader files and learned the order in which they render in a game – by taking the time to study the existing codebase and rendering engine, we got a good idea of exactly which shaders to edit for each of our ideas. While implementing our ideas, we learned to apply the concepts that we learned in class about texture mapping, lighting (Blinn Phong shading, one-bounce global illumination, reflection across materials) and shaders (cloth simulation vertex and fragment). We were excited to build upon these, such as trying to implement reflection off of a water surface while following Minecraft’s specific documentation, or simulating swaying trees by first editing the vertex shader for tree leaves to then displace and pass on per-vertex positions to the corresponding fragment shader.		</p>
 
 		<h2>Results</h2>
-		<!-- <p>Final outputs include:</p>
-		<ul>
-			<li>Textured tree trunks and paths with cherry blossom and cobblestone patterns</li>
-			<li>Watercolor shader applied to blocks and environment</li>
-			<li>Packaged zip folder containing a bundled shader and resource pack</li>
-		</ul>
-		<p>Performance evaluation confirmed stable FPS (~60) with all shaders and animations active, and rendering quality was quantitatively evaluated using SSIM and MSE comparisons to reference textures. Artifacts were minimal following shader refinement.</p> -->
+		<h5>Starting Point Shader Codebase</h5>
+		<iframe width="560" height="315" src="https://www.youtube.com/embed/LAoX5wjT_rA"
+				title="Shader Codebase" frameborder="0" allowfullscreen></iframe>
+		
+		<h5>Japan Theme Features</h5>
+		<iframe width="560" height="315" src="https://www.youtube.com/embed/9ccCZc4hh-8"
+				title="Japan Features" frameborder="0" allowfullscreen></iframe>
+		
+		<h5>Candy Theme Features</h5>
+		<iframe width="560" height="315" src="https://www.youtube.com/embed/snVh_I00oIY"
+				title="Candy Features" frameborder="0" allowfullscreen></iframe>
+		
+		<h5>Watercolor Shader Effect</h5>
+		<iframe width="560" height="315" src="https://www.youtube.com/embed/PrVY7SR8UXc"
+				title="Watercolor Effect" frameborder="0" allowfullscreen></iframe>
+		
+		<h5>Blended Theme (Fantasy)</h5>
+		<iframe width="560" height="315" src="https://www.youtube.com/embed/jnLRiRvoBjI"
+				title="Blended Theme" frameborder="0" allowfullscreen></iframe>
 
+				<h5 style="text-align: center;">Twinkling Stars & Flashing Comets</h5>
+				<div style="display: flex; flex-direction: column; align-items: center;">
+				  <table style="width: 100%; text-align: center; border-collapse: collapse;">
+					<tr>
+					  <td>
+						<img src="imgs/flashing_lights.gif" width="300px"/>
+						<figcaption>Flashing Lights</figcaption>
+					  </td>
+					  <td>
+						<img src="imgs/flashing_stars.gif" width="300px"/>
+						<figcaption>Sparkling Stars</figcaption>
+					  </td>
+					  <td>
+						<img src="imgs/flashing_stars_2.gif" width="300px"/>
+						<figcaption>Stars and Lights</figcaption>
+					  </td>
+					</tr>
+				  </table>
+				</div>
+				<h5 style="text-align: center;">Pink Sea Reflection</h5>
+				<div style="display: flex; flex-direction: column; align-items: center;">
+				  <table style="width: 100%; text-align: center; border-collapse: collapse;">
+					<tr>
+					  <td>
+						<img src="imgs/candy_sea.gif" width="400px"/>
+						<figcaption>Pink Sea Surface</figcaption>
+					  </td>
+					  <td>
+						<img src="imgs/candy_sea_below_lvl.gif" width="400px"/>
+						<figcaption>Underwater View</figcaption>
+					  </td>
+					</tr>
+				  </table>
+				</div>
+				<h5 style="text-align: center;">Swaying Trees</h5>
+				<div style="display: flex; flex-direction: column; align-items: center;">
+				  <table style="width: 100%; text-align: center; border-collapse: collapse;">
+					<tr>
+					  <td>
+						<img src="imgs/swaying_tree.gif" width="300px"/>
+						<figcaption>Candy Tree Swaying</figcaption>
+					  </td>
+					  <td>
+						<img src="imgs/swaying_tree_2.gif" width="300px"/>
+						<figcaption>Tree Wind Motion</figcaption>
+					  </td>
+					  <td>
+						<img src="imgs/swaying_tree_3.gif" width="300px"/>
+						<figcaption>Japan Tree Animation</figcaption>
+					  </td>
+					</tr>
+				  </table>
+				</div>
+
+				<h5 style="text-align: center;">Watercolor Effects</h5>
+				<div style="display: flex; flex-direction: column; align-items: center;">
+				  <table style="width: 100%; text-align: center; border-collapse: collapse;">
+					<tr>
+					  <td>
+						<img src="imgs/watercolor_effect.png" width="400px"/>
+						<figcaption>Watercolor (Gaussian Blur)</figcaption>
+					  </td>
+					  <td>
+						<img src="imgs/watercolor_effect_bilateral.png" width="400px"/>
+						<figcaption>Watercolor (Bilateral Filter)</figcaption>
+					  </td>
+					</tr>
+				  </table>
+				</div>
+				
+			<p>We also intended on maintaining a high frame rate per second (FPS) </p>
+	
 		<h2>References</h2>
 		<ul>
-			<li>Lefebvre, Sylvain, and Hugues Hoppe. “Appearance-Space Texture Synthesis.” ACM Transactions on Graphics (2006).</li>
-			<li>Unity Shader Graph Documentation</li>
-			<li>OptiFine and Blockbench Documentation</li>
+			<li><a href="https://github.com/shaderLABS/Base-330/tree/main/shaders" target="_blank">
+				shaderLABS Base-330 GitHub Repository</a></li>
+			<li><a href="http://www.cs.princeton.edu/courses/archive/fall07/cos597B/papers/kopf-solid-texture.pdf">Solid Texture Synthesis from 2D Exemplars</li>
+			<li><a href="https://youtu.be/dSS5HuSr4SQ?si=XbviSwVSCmP1UrQZ">Minecraft Shaders Tutorial</li>
+			<li><a href="https://www.youtube.com/watch?v=HHMJevNEYPc">Minecraft Shaders with Realistic Lighting Tutorial</li>
+			<li><a href="https://www.9minecraft.net/bsl-shaders/#:~:text=,world%20for%20a%20more%20realistic" target="_blank">BSL Shaders on 9Minecraft</a></li>
+			<li><a href="https://www.youtube.com/watch?v=NCptEJ1Uevg&ab_channel=OGLDEV" target="_blank">GLSL Tutorial (OGLDEV YouTube)</a></li>
+			<li><a href="https://shaderlabs.org/wiki/Rendering_Pipeline_(OptiFine,_ShadersMod)#:~:text=Composite%20%28%60composite" target="_blank">ShaderLabs: OptiFine Rendering Pipeline (Composite)</a></li>
+			<li><a href="https://www.rockpapershotgun.com/best-minecraft-shaders#:~:text=At%20the%20time%20of%20writing%2C,without%20spending%20ages%20tweaking%20settings" target="_blank">Best Minecraft Shaders – Rock Paper Shotgun</a></li>
+			<li><a href="https://minecraft.fandom.com/wiki/Shaders#:~:text=Shaders%20are%20written%20in%20the,bloom%2C%20god%20rays%2C%20and%20blur" target="_blank">Minecraft Fandom: Shaders</a></li>
+			<li><a href="https://shaderlabs.org/wiki/Rendering_Pipeline_(OptiFine,_ShadersMod)#:~:text=things%20like%20chests%20and%20banners,There%20are%20a%20few%20other" target="_blank">ShaderLabs: OptiFine Shader Pipeline (Extended)</a></li>
+			<li><a href="https://www.9minecraft.net/tag/minecraft-1-21-4-shaders/" target="_blank">Minecraft 1.21.4 Shaders – 9Minecraft</a></li>
+		  </ul>
+
+
 		</ul>
 
 		<h2>Contributions</h2>
