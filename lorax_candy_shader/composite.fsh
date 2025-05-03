@@ -32,25 +32,24 @@ void main() {
 
     vec3 ambientColor = mix(pastelNight, pastelDay, dayBlend);
 
-    // ⬇️ Lightmap override: keep very bright pastel lighting, ignore dark shadows
+    //⬇️lightmap override: keep very bright pastel lighting, ignore dark shadows
     float blockLight = max(LightmapCoords.x, 0.4); // Force minimum blocklight
     float skyLight = max(LightmapCoords.y, 0.6);   // Force minimum skylight
 
     vec3 lighting = (ambientColor * 1.2) * (blockLight * 0.5 + skyLight * 0.5);
 
-    // Add a soft sun diffuse
     vec3 sunDirection = normalize(vec3(0.2, 1.0, 0.2));
     float sunDiffuse = max(dot(Normal, sunDirection), 0.0);
 
     lighting += ambientColor * sunDiffuse * 0.4;
 
-    // Blend the color
+    //blend
     vec3 finalColor = Albedo * lighting;
 
-    // BOOST pastel brightness for grass/leaves etc
+    //BOOST pastel brightness for grass/leaves etc
     finalColor = mix(finalColor, vec3(1.0, 0.9, 1.0), 0.2);
 
-    // Add light fog
+    //light fog
     float z = Depth * 2.0 - 1.0;
     float linearDepth = (2.0 * near * far) / (far + near - z * (far - near));
     float fogFactor = clamp((linearDepth - 48.0) / (150.0 - 48.0), 0.0, 1.0);

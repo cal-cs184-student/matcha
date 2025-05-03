@@ -11,9 +11,9 @@ uniform sampler2D texture;
 void main() {
     vec4 texColor = texture2D(texture, texcoord);
 
-    // ⬇️ This decides if we should apply biome tint or NOT
+    // ⬇️ this decides if we should apply biome tint or NOT
     float totalColor = texColor.r + texColor.g + texColor.b;
-    bool isWhiteBlock = (totalColor > 2.8); // If texture is very close to pure white
+    bool isWhiteBlock = (totalColor > 2.8); //if texture is very close to pure white
 
     vec4 albedo = isWhiteBlock ? texColor : texColor * vertexColor;
 
