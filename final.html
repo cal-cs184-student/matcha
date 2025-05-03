@@ -228,14 +228,14 @@
 		  skyCol = mix(skyCol, starC, halo * tw * starPhase);</code></pre>
 		  
 			<p>
-			  large stars add cross flares:
+			  Large stars added cross flares:
 			</p>
 			<pre><code>float flare = (smoothstep(0.35, 0.0, abs(f.x)) +
 						 smoothstep(0.35, 0.0, abs(f.y))) * 0.5;
 		  skyCol = mix(skyCol, bigC, (halo+flare) * twBig * starPhase);</code></pre>
 		  
 			<p>
-			  Stars fade in and out smoothly:
+			  And we added this line for stars to fade in and out smoothly:
 			</p>
 			<pre><code>float starPhase = max(0.0, (0.6 - dayFrac) / 0.6);</code></pre>
 
@@ -269,6 +269,85 @@
 				and color difference respectively. We also compute a weighted average of these samples and adjust the tone by 
 				raising the result to the 0.9<sup>th</sup> power before setting it as the pixel’s final texture value.
 			  </p>
+		<h3>Sky that changes color from day to night (cotton-candy pink and soft lavender in the morning and pastel purplish pink and deep lavender in the night)</h3>
+		<p>To create a pastel themed sky that has a blend of two colors and changes according to whether it is night or day in Minecraft, we used a cosine function to map Minecraft’s internal clock, represented by my <code>worldTime</code>, to a specific time of the day. We defined what we wanted the top of the sky (the zenith) and the horizon to look like (either cotton-candy pink and soft lavender in the morning and pastel purplish pink and deep lavender in the night, for the horizon and zenith respectively), and then interpolated across these values using the output of the cosine function as our parameter. This final interpolated color is outputted as the color of our sky. Definitely a really pretty implementation of the concept of linear interpolation that we learned about in class! </p>
+
+		<h3>Fog and Clouds</h3>
+		
+		<p>
+	The logic for this feature lives in two spots:
+		  </p>
+		  <ul>
+			<li><code>gbuffers_sky.fsh</code> – draws horizon-to-zenith gradient and first-pass clouds.</li>
+			<li><code>composite.fsh</code> – applies depth-aware fog after every opaque surface has rendered.</li>
+		  </ul>
+		
+		  <h4>First-pass Clouds in <code>gbuffers_sky.fsh</code></h3>
+		  <p>
+			We reused the same 2D value-noise routine that shaped the night-time starfield but samplde at one-quarter the frequency to create broad, slow-moving puffs:
+		  </p>
+		
+		  <pre><code>vec2  uv   = (frag.xy + vec2(worldTime*0.00003, 0.0)) * 0.0015;
+		float density = noise(uv) * noise(uv*2.0);      	// fractal detail
+		float mask = smoothstep(0.45, 0.65, density);  // soft edge
+		</code></pre>
+		
+		  <p>
+			We then blended a teal-tinted daytime colour into the sky gradient:
+		  </p>
+		
+		  <pre><code>vec3 cloudDay   = vec3(0.80, 1.00, 0.95);
+		vec3 cloudNight = vec3(0.15, 0.25, 0.35);
+		vec3 cloudCol   = mix(cloudNight, cloudDay, dayFrac);
+		
+		skyCol = mix(skyCol, cloudCol, mask * 0.6); // 60% opacity cap
+		</code></pre>
+		
+		  <p>
+			The 60% opacity cap keeps clouds translucent enough to see stars peek through at dusk.
+		  </p>
+		
+		  <h3>Exponential Fog in <code>composite.fsh</code></h3>
+		  <p>
+			By the time <code>composite.fsh</code> ran, the G-buffer gave us per-pixel linear depth z in view space. We converted metres to a dimensionless fog factor:
+		  </p>
+		
+		  <pre><code>float fogFactor = 1.0 - exp(-z * fogDensity);   // e‑λz
+		fogFactor = clamp(fogFactor, 0.0, 1.0);
+		</code></pre>
+		
+		  <p>
+			<code>fogDensity</code> is time-of-day aware:
+		  </p>
+		
+		  <pre><code>float fogDensity = mix(0.002, 0.0005, dayFrac); // thick at night
+		</code></pre>
+		
+			  <p>
+			We want the mist to inherit ambient skylight so it never messed up with our colour palette. This meant sampling the same horizon/zenith blend we already computed for the sky, but evaluating it at the fragment’s screen-space y:
+		  </p>
+		
+		  <pre><code>float v = frag.y / viewHeight;
+		vec3  fogCol = mix(horizonCol, zenithCol, v);   // pulled from sky pass
+		</code></pre>
+		
+		  <p>
+			Because both shaders share the day/night maths (<code>dayFrac</code>), the fog subtly reddened at sunset and turns turquoise by midnight, syncing with the celestial dome.
+		  </p>
+		
+		  <p>
+			Finally, the compositor blends world colour (scene.rgb) with <code>fogCol</code>, multiplies in the cloud alpha (so distant mountains disappear behind clouds), and writes to the framebuffer:
+		  </p>
+		
+		  <pre><code>vec3  scene = texture2D(colortex0, screenUV).rgb;
+		vec3  fogged = mix(scene, fogCol, fogFactor);
+		
+		float cloudShadow = texture2D(skySampler, screenUV).a;
+		fogged = mix(fogged, fogged*0.9, cloudShadow*0.4);
+		
+		gl_FragColor = vec4(fogged, 1.0);
+		</code></pre>
+	
 
 		<h2>Problems Encountered & Solutions</h2>
 
