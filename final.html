@@ -315,7 +315,7 @@ gl_FragColor = vec4(normalize(colour), 1.0);       // HDR safe
 
 <p>
   The grain uses an inline hash instead of a 64×64 blue‑noise texture, avoiding an
-  extra sampler and preventing shader‑cache stalls reported on some Intel GPUs.
+  extra sampler and preventing shader‑cache stalls.
   Because the amplitude is so small, the noise disappears once bloom is applied,
   serving only as an anti‑banding aid.
 </p>
@@ -448,14 +448,14 @@ gl_FragColor    = vec4(skyCol, 1.0);
 
 		<h3>Twinkling Stars and Flashing Comets</h3>
 			<p>
-			  Our goal was to populate the candy sky with stars that feel organic, yet do not "crawl” across the dome as the player moves. To achieve frame‑to‑frame stability we index the framebuffer with a coarse logical grid:
+			  Our goal was to populate the candy sky with stars that feel organic, yet do not "crawl” across the dome as the player moves. To achieve frame‑to‑frame stability, we index the framebuffer with a logical grid:
 			</p>
 			<pre><code>vec2  starUV = gl_FragCoord.xy * 0.007;  // 1 cell ≈ 140 px
 float h      = hash(floor(starUV));      // deterministic per cell
 		  if (h > 0.982) { /* small star */ }
 		  if (h > 0.9975) { /* big flare */ }</code></pre>
 			<p>
-			  Because we hash the <em>integer</em> cell coordinate, the value <code>h</code> is completely independent of screen resolution, camera rotation, or sub‑pixel jitter. Thresholding that hash has two benefits: values above <code>0.982</code> become “everyday” twinkles, whereas the extreme tail <code>> 0.9975</code> triggers oversized flares. A single random number therefore drives both population density <em>and</em> per‑star variation. No arrays, loops, or texture look‑ups required!</p>
+			  Because we hash the integer cell coordinate, the value <code>h</code> is completely independent of screen resolution, camera rotation, or sub‑pixel jitter. Thresholding the hash has two benefits: values above <code>0.982</code> become “everyday” twinkles, whereas the extreme tail <code>> 0.9975</code> triggers oversized flares. Thus, population density and per‑star variation depend solely on one variable. This eliminates the need for additional loops or textures lookups that would compromise the framerate.</p>
 		<p>For the twinkling effect, we drew on biological inspiration. Human eyes are most sensitive to brightness changes around <code>10–15 Hz</code>, so we modulated each star’s intensity with a slow sine wave. 
 			The hash value <code>h</code> is re‑used as a phase offset (<code>h*80.0</code>) so stars twinkle out‑of‑sync, 
 			avoiding the disco effect you get when every dot pulses together. The halo radius 0.32 is tuned so even at high resolutions, the smallest star covers multiple pixels and eliminates sub‑pixel shimmering.
@@ -465,17 +465,17 @@ float h      = hash(floor(starUV));      // deterministic per cell
 		  skyCol = mix(skyCol, starC, halo * tw * starPhase);</code></pre>
 		  
 			<p>
-			  To give the night sky the occasional “wow” moment we add a cross‑sparkle meteor whenever <code>h</code> exceeds 0.9975. We treat the intra‑cell coordinate <code>f = fract(starUV) – 0.5</code> as an origin‑centered vector. Its <code>x‑</code> and <code>y‑</code>components feed two <code>smoothstep</code> calls that fade the arms. Those arms are then averaged and blended with a wider circular halo.
-				The separate pulse <code>twBig</code> uses <code>worldTime * 0.012</code> which is half the small‑star frequency, so that meteors and coments pulse more majestically.
+			  To give the night sky an exciting flare, we add a cross‑sparkle meteor whenever <code>h</code> exceeds 0.9975. We treat the intra‑cell coordinate <code>f = fract(starUV) – 0.5</code> as an origin‑centered vector. Its <code>x‑</code> and <code>y‑</code>components feed two <code>smoothstep</code> calls that fade the arms. Those arms are then averaged and blended with a wider circular halo.
+				The separate pulse <code>twBig</code> uses <code>worldTime * 0.012</code> which is half the small‑star frequency, so that meteors and coments pulse slower.
 			</p>
 			<pre><code>float flare = (smoothstep(0.35, 0.0, abs(f.x)) +
 						 smoothstep(0.35, 0.0, abs(f.y))) * 0.5;
 		  skyCol = mix(skyCol, bigC, (halo+flare) * twBig * starPhase);</code></pre>
 		  
 			<p>
-			  Stars should fade in during twilight and fade out at dawn. Instead of hard‑coding tick boundaries we derive a scalar 
+			  We wanted stars to fade in during twilight and fade out at dawn like in the real world. Instead of hard‑coding tick boundaries, we derived a scalar 
 				from the sky’s own day/night blend factor. Because <code>dayFrac</code> already comes from a shifted cosine, <code>starPhase</code> inherits 
-				smooth easing and guarantees no pop‑ins. The same scalar also modulates comet brightness, cloud darkening, and eventual fog colour, keeping every atmospheric layer in lock‑step without extra state variables.
+				smoothstep attributes. The same scalar also modulates comet brightness, cloud darkening, and eventual fog color.
 			</p>
 			<pre><code>float starPhase = max(0.0, (0.6 - dayFrac) / 0.6);</code></pre>
 	
