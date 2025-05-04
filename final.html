@@ -239,7 +239,7 @@ void main() {
   <code>(1 − cos θ)<sup>5</sup></code> falls off steeply, the mirror
   contribution remains negligible until <code>dot(N, V)</code> drops below 0.3. 
 	Beyond that angle it rises rapidly.  The result matches real water, which
-  turns glassy at grazing incidence while retaining colour and translucency
+  turns glassy at grazing incidence while retaining color and translucency
   under near‑normal viewing. A caveat is that exactly at the sky-water intersection plane, the views are distorted.
 
 </p>
@@ -492,16 +492,16 @@ float h      = hash(floor(starUV));      // deterministic per cell
 
 		<h3>Knowing Which Files To Edit</h3>
 		  Our first attempt at a pastel sky was to hard‑code a pink return value in
-  <code>gbuffers_sky.fsh</code>, assuming that file controlled the dome colour.
-  Nothing changed in‑game, which told us the shader was never being executed.
+  <code>gbuffers_sky.fsh</code>, assuming that file controlled the dome color.
+  However when we ran the files, nothing changed in‑game!
   After cross‑checking the Minecraft Shader Wiki and inspecting the
-  <code>shaders.properties</code> manifest, we discovered that OptiFine’s default
+  <code>shaders.properties</code> documentation, we discovered that OptiFine’s default
   pipeline actually calls <code>gbuffers_skybasic.fsh</code> for the sky pass and
   then overwrites the result inside <code>composite.fsh</code> when it blends the
   final frame.  In other words, our pink vector was rendered, but the composite
   stage immediately replaced it unless the fragment’s depth equalled 1.  To fix this, we
 		edited
-  <code>shaders.properties</code> to point to othe appopriate edited file and added an early‑exit
+  <code>shaders.properties</code> to point to the appopriate edited file and added an early‑exit
   clause in <code>composite.fsh</code> that leaves sky pixels untouched
   (<code>if(depth == 1.0) return;</code>).
 
